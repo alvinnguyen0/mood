@@ -27,6 +27,27 @@ Config via env vars:
 - `ADDR` — listen address (default `:8080`)
 - `DB_DSN` — SQLite DSN (default `file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)`)
 
+## Seed test data
+
+`cmd/seed` populates the database with test accounts and ~a year of varied mood
+history, so the **Everyone** grid (and individual **You** grids) have something
+to render. It writes to the same DB as the server (`DB_DSN`, default `mood.db`).
+
+```bash
+go run ./cmd/seed                  # 100 accounts, ~365 days of history
+go run ./cmd/seed -n 50 -seed 7    # 50 accounts, reproducible RNG
+DB_DSN=file:dev.db go run ./cmd/seed
+```
+
+Accounts are `user001@example.com` … `userNNN@example.com`, all sharing one
+password (default `password123`, override with `-password`), so you can log in
+as any of them. Moods vary per-user (cheerful vs. glum baselines, sparse vs.
+diligent loggers) over a slow community drift, so days read as genuinely good or
+bad rather than uniform noise. Re-running is idempotent: existing users are
+skipped and mood entries upsert, so the data converges instead of duplicating.
+
+Flags: `-n` (accounts), `-days` (history depth), `-password`, `-seed`.
+
 > **Not yet compiled/tested in this environment** — it was written without a Go
 > toolchain or network available, so `go run .` is the first real build. If the
 > compiler flags anything, it'll be a small fix; the structure and logic are
