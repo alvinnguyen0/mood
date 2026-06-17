@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math"
 	"sort"
+	"strings"
 	"time"
 
 	"mood-tracker/internal/model"
@@ -18,7 +19,7 @@ var palette = [5]string{"#5b7fa6", "#6fa8a0", "#e6c35c", "#f0954e", "#f06d4e"}
 const emptyColor = "#ebedf0"
 
 var faceEmoji = [5]string{"\U0001F641", "\U0001F615", "\U0001F610", "\U0001F642", "\U0001F604"}
-var faceLabel = [5]string{"Frown", "Meh", "Neutral", "Slight smile", "Big smile"}
+var faceLabel = [5]string{"frown", "meh", "neutral", "slight smile", "big smile"}
 
 // FaceInfo describes one mood level for the picker and legend.
 type FaceInfo struct {
@@ -134,7 +135,7 @@ func monthRow(weeks [][7]Cell) []string {
 		if ds == "" {
 			continue
 		}
-		ab := parseDate(ds).Format("Jan")
+		ab := strings.ToLower(parseDate(ds).Format("Jan"))
 		if ab != last {
 			out[i] = ab
 			last = ab

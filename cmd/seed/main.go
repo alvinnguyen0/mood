@@ -8,6 +8,7 @@
 //
 //	go run ./cmd/seed                 # 100 users into the default mood.db
 //	go run ./cmd/seed -n 50 -seed 7   # 50 users, reproducible RNG
+//	go run ./cmd/seed -docker         # seed the running docker compose db
 //	DB_DSN=file:dev.db go run ./cmd/seed
 //
 // All seeded accounts share the same password (default "password123") so you
@@ -25,6 +26,7 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	"os/exec"
 	"time"
 
 	"mood-tracker/internal/store"
@@ -46,12 +48,20 @@ var timezones = []string{
 	"Australia/Sydney",
 }
 
+const dockerDSN = "file:/data/mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)"
+
 func main() {
 	n := flag.Int("n", 100, "number of test accounts to create")
 	days := flag.Int("days", 365, "how many days of history to backfill")
 	password := flag.String("password", "password123", "shared password for all seeded accounts")
 	seed := flag.Int64("seed", time.Now().UnixNano(), "RNG seed (set for reproducible data)")
+	docker := flag.Bool("docker", false, "seed the database running in docker compose")
 	flag.Parse()
+
+	if *docker {
+		seedInDocker()
+		return
+	}
 
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
@@ -124,6 +134,61 @@ func main() {
 	log.Printf("seed complete: %d users created, %d existing reused, %d mood entries written",
 		createdUsers, skipped, totalEntries)
 	log.Printf("log in as any of user001@example.com .. user%03d@example.com (password: %q)", *n, *password)
+}
+
+// seedInDocker builds a Linux binary from the current source, copies it into
+// the running docker compose "app" container, and execs it there against the
+// container's database. All flags except -docker are forwarded as-is.
+func seedInDocker() {
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("getwd: %v", err)
+	}
+
+	tmp, err := os.CreateTemp("", "mood-seed-*")
+	if err != nil {
+		log.Fatalf("tempfile: %v", err)
+	}
+	tmp.Close()
+	defer os.Remove(tmp.Name())
+
+	log.Println("seed: building linux binary…")
+	build := exec.Command("go", "build", "-o", tmp.Name(), "./cmd/seed")
+	build.Dir = cwd
+	build.Env = append(os.Environ(), "GOOS=linux", "CGO_ENABLED=0")
+	build.Stdout = os.Stderr
+	build.Stderr = os.Stderr
+	if err := build.Run(); err != nil {
+		log.Fatalf("build: %v", err)
+	}
+
+	log.Println("seed: copying binary into container…")
+	cp := exec.Command("docker", "compose", "cp", tmp.Name(), "app:/tmp/mood-seed")
+	cp.Dir = cwd
+	cp.Stdout = os.Stderr
+	cp.Stderr = os.Stderr
+	if err := cp.Run(); err != nil {
+		log.Fatalf("docker compose cp: %v", err)
+	}
+
+	// Forward all flags except -docker / --docker.
+	var inner []string
+	for _, a := range os.Args[1:] {
+		if a == "-docker" || a == "--docker" {
+			continue
+		}
+		inner = append(inner, a)
+	}
+
+	runArgs := []string{"compose", "exec", "-T", "-e", "DB_DSN=" + dockerDSN, "app", "/tmp/mood-seed"}
+	runArgs = append(runArgs, inner...)
+	cmd := exec.Command("docker", runArgs...)
+	cmd.Dir = cwd
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		log.Fatalf("seed in container: %v", err)
+	}
 }
 
 // clampLevel keeps a computed mood within the valid 1..5 range.

@@ -1,21 +1,21 @@
-{{define "title"}}Sign up{{end}}
+{{define "title"}}sign up{{end}}
 {{define "content"}}
 <section class="auth">
-  <h1>Create your account</h1>
+  <h1>create your account</h1>
   {{if .Error}}<p class="err">{{.Error}}</p>{{end}}
   <form method="post" action="/signup" class="authform">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    <label>Email
+    <label>email
       <input type="email" name="email" autocomplete="email" required autofocus>
     </label>
-    <label>Password
+    <label>password
       <input type="password" name="password" autocomplete="new-password" minlength="8" required>
     </label>
-    <p class="hint">At least 8 characters.</p>
+    <p class="hint">at least 8 characters.</p>
     <input type="hidden" name="tz" id="tz" value="UTC">
-    <button type="submit">Sign up</button>
+    <button type="submit">sign up</button>
   </form>
-  <p class="alt">Already have an account? <a href="/login">Log in</a></p>
+  <p class="alt">already have an account? <a href="/login">log in</a></p>
 </section>
 <script>
   // Capture the browser's timezone so "today" is computed in the user's local time.

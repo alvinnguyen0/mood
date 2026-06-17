@@ -51,11 +51,11 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 		tz = "UTC"
 	}
 	if email == "" || len(pw) < 8 {
-		s.render(w, "signup", "layout", authData{Error: "Enter an email and a password of at least 8 characters.", CSRFToken: csrfFrom(r.Context())})
+		s.render(w, "signup", "layout", authData{Error: "enter an email and a password of at least 8 characters.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	if len(email) > maxEmailLen || !isValidEmail(email) {
-		s.render(w, "signup", "layout", authData{Error: "Please enter a valid email address.", CSRFToken: csrfFrom(r.Context())})
+		s.render(w, "signup", "layout", authData{Error: "please enter a valid email address.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	if len(pw) > maxPasswordLen {
@@ -64,7 +64,7 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 
 	_, err := s.store.UserByEmail(r.Context(), email)
 	if err == nil {
-		s.render(w, "signup", "layout", authData{Error: "That email is already registered.", CSRFToken: csrfFrom(r.Context())})
+		s.render(w, "signup", "layout", authData{Error: "that email is already registered.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	if !errors.Is(err, store.ErrNotFound) {
@@ -95,7 +95,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 
 	u, err := s.store.UserByEmail(r.Context(), email)
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(pw)) != nil {
-		s.render(w, "login", "layout", authData{Error: "Incorrect email or password.", CSRFToken: csrfFrom(r.Context())})
+		s.render(w, "login", "layout", authData{Error: "incorrect email or password.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	s.startSession(w, r, u.ID)
