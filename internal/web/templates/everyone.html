@@ -1,13 +1,13 @@
-{{define "title"}}Everyone{{end}}
+{{define "title"}}everyone{{end}}
 {{define "content"}}
 <section class="today">
-  <h1>How everyone feels</h1>
-  <p class="sub">Each cell is the average mood across everyone who logged that day. Individual entries stay private.</p>
+  <h1>how everyone feels</h1>
+  <p class="sub">each cell is the average mood across everyone who logged that day. individual entries stay private.</p>
 </section>
 
 <section class="gridsection">
   {{if eq .EntryCount 0}}
-  <p class="empty-state">No moods have been logged yet. Be the first to share how you're feeling!</p>
+  <p class="empty-state">no moods have been logged yet. be the first to share how you're feeling!</p>
   {{end}}
   {{template "moodgrid" .Grid}}
   {{template "legend" .}}

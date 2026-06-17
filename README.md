@@ -36,6 +36,7 @@ to render. It writes to the same DB as the server (`DB_DSN`, default `mood.db`).
 ```bash
 go run ./cmd/seed                  # 100 accounts, ~365 days of history
 go run ./cmd/seed -n 50 -seed 7    # 50 accounts, reproducible RNG
+go run ./cmd/seed -docker          # seed the running docker compose db
 DB_DSN=file:dev.db go run ./cmd/seed
 ```
 
@@ -46,7 +47,7 @@ diligent loggers) over a slow community drift, so days read as genuinely good or
 bad rather than uniform noise. Re-running is idempotent: existing users are
 skipped and mood entries upsert, so the data converges instead of duplicating.
 
-Flags: `-n` (accounts), `-days` (history depth), `-password`, `-seed`.
+Flags: `-n` (accounts), `-days` (history depth), `-password`, `-seed`, `-docker`.
 
 > **Not yet compiled/tested in this environment** — it was written without a Go
 > toolchain or network available, so `go run .` is the first real build. If the
