@@ -1,0 +1,5 @@
+# Replace with your domain name.
+# Caddy automatically provisions TLS via Let's Encrypt.
+yourdomain.com {
+	reverse_proxy app:8080
+}
