@@ -1,0 +1,7 @@
+{{define "legend"}}
+<div class="legend">
+  <span class="lo">low</span>
+  {{range palette}}<i class="swatch" style="background-color:{{.}}"></i>{{end}}
+  <span class="hi">high</span>
+</div>
+{{end}}

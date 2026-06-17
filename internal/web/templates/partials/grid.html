@@ -1,0 +1,13 @@
+{{define "moodgrid"}}
+<div class="gridwrap">
+  <div class="months">{{range .MonthRow}}<span class="mlabel">{{.}}</span>{{end}}</div>
+  <div class="gridbody">
+    <div class="wdays">
+      <span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span>
+    </div>
+    <div class="grid">
+      {{range .Weeks}}<div class="week">{{range .}}{{if .Future}}<div class="cell future"></div>{{else}}<div class="cell" style="background-color:{{.Color}}" data-tip="{{.Tip}}"></div>{{end}}{{end}}</div>{{end}}
+    </div>
+  </div>
+</div>
+{{end}}

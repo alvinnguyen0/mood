@@ -1,0 +1,29 @@
+{{define "layout"}}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{block "title" .}}Mood{{end}} · mood</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
+</head>
+<body>
+<header class="nav">
+  <div class="brand">mood</div>
+  {{if .Tab}}
+  <nav class="tabs">
+    <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">You</a>
+    <a href="/everyone" class="{{if eq .Tab "everyone"}}active{{end}}">Everyone</a>
+  </nav>
+  <form method="post" action="/logout" class="logout"><button type="submit">Log out</button></form>
+  {{end}}
+</header>
+
+<main>
+{{block "content" .}}{{end}}
+</main>
+
+<div id="tip" class="tip" hidden></div>
+<script src="/static/app.js" defer></script>
+</body>
+</html>{{end}}

@@ -1,0 +1,12 @@
+{{define "title"}}Everyone{{end}}
+{{define "content"}}
+<section class="today">
+  <h1>How everyone feels</h1>
+  <p class="sub">Each cell is the average mood across everyone who logged that day. Individual entries stay private.</p>
+</section>
+
+<section class="gridsection">
+  {{template "moodgrid" .Grid}}
+  {{template "legend" .}}
+</section>
+{{end}}

@@ -1,0 +1,17 @@
+{{define "todaycard"}}
+<div id="todaycard" class="todaycard">
+  <form class="picker" method="post" action="/mood"
+        hx-post="/mood" hx-target="#todaycard" hx-swap="outerHTML">
+    {{range .Faces}}
+    <button type="submit" name="level" value="{{.Level}}"
+            class="face{{if eq .Level $.TodayLevel}} selected{{end}}"
+            title="{{.Label}}" aria-label="{{.Label}}">{{.Emoji}}</button>
+    {{end}}
+  </form>
+  {{if .TodayLevel}}
+    <p class="loggednote">Logged for {{.Today}}: {{face .TodayLevel}} — tap another face to change it.</p>
+  {{else}}
+    <p class="loggednote">Pick a face to log {{.Today}}.</p>
+  {{end}}
+</div>
+{{end}}

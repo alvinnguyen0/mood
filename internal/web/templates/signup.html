@@ -1,0 +1,26 @@
+{{define "title"}}Sign up{{end}}
+{{define "content"}}
+<section class="auth">
+  <h1>Create your account</h1>
+  {{if .Error}}<p class="err">{{.Error}}</p>{{end}}
+  <form method="post" action="/signup" class="authform">
+    <label>Email
+      <input type="email" name="email" autocomplete="email" required autofocus>
+    </label>
+    <label>Password
+      <input type="password" name="password" autocomplete="new-password" minlength="8" required>
+    </label>
+    <p class="hint">At least 8 characters.</p>
+    <input type="hidden" name="tz" id="tz" value="UTC">
+    <button type="submit">Sign up</button>
+  </form>
+  <p class="alt">Already have an account? <a href="/login">Log in</a></p>
+</section>
+<script>
+  // Capture the browser's timezone so "today" is computed in the user's local time.
+  try {
+    document.getElementById('tz').value =
+      Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  } catch (e) { /* keep UTC */ }
+</script>
+{{end}}

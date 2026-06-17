@@ -1,0 +1,20 @@
+{{define "title"}}You{{end}}
+{{define "content"}}
+<section class="today">
+  <h1>How are you today?</h1>
+  {{template "todaycard" .}}
+</section>
+
+<section class="stats">
+  <div class="streaks">
+    <div class="streak"><span class="num">{{.Current}}</span><span class="lbl">current streak</span></div>
+    <div class="streak"><span class="num">{{.Longest}}</span><span class="lbl">longest streak</span></div>
+  </div>
+</section>
+
+<section class="gridsection">
+  <h2>Your year</h2>
+  {{template "moodgrid" .Grid}}
+  {{template "legend" .}}
+</section>
+{{end}}
