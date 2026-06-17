@@ -166,3 +166,24 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   background: #fdecea; color: #b3261e;
   padding: 10px 12px; border-radius: 10px; font-size: .9rem;
 }
+
+/* --- empty state --- */
+.empty-state {
+  color: var(--muted);
+  font-size: .95rem;
+  margin: 18px 0;
+}
+
+/* --- responsive --- */
+@media (max-width: 600px) {
+  .nav { flex-direction: column; gap: 10px; align-items: center; text-align: center; }
+  .logout { margin-left: 0; }
+  .face { width: 48px; height: 48px; font-size: 26px; }
+  .streak .num { font-size: 1.4rem; }
+  .streaks { gap: 20px; }
+  :root { --cell: 10px; }
+}
+@media (max-width: 400px) {
+  :root { --cell: 8px; }
+  .face { width: 42px; height: 42px; font-size: 22px; }
+}

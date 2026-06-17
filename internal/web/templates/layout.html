@@ -15,7 +15,7 @@
     <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">You</a>
     <a href="/everyone" class="{{if eq .Tab "everyone"}}active{{end}}">Everyone</a>
   </nav>
-  <form method="post" action="/logout" class="logout"><button type="submit">Log out</button></form>
+  <form method="post" action="/logout" class="logout"><input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><button type="submit">Log out</button></form>
   {{end}}
 </header>
 

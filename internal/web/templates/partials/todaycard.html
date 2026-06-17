@@ -2,6 +2,7 @@
 <div id="todaycard" class="todaycard">
   <form class="picker" method="post" action="/mood"
         hx-post="/mood" hx-target="#todaycard" hx-swap="outerHTML">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     {{range .Faces}}
     <button type="submit" name="level" value="{{.Level}}"
             class="face{{if eq .Level $.TodayLevel}} selected{{end}}"

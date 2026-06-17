@@ -9,7 +9,7 @@ import (
 
 func (s *Server) routes() {
 	r := chi.NewRouter()
-	r.Use(s.recoverer, s.logger)
+	r.Use(s.recoverer, s.logger, s.csrfProtect)
 
 	staticFS, _ := fs.Sub(assets, "static")
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.FS(staticFS))))

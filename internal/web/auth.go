@@ -15,6 +15,11 @@ import (
 )
 
 const (
+	maxEmailLen    = 254
+	maxPasswordLen = 72 // bcrypt limit
+)
+
+const (
 	sessionCookie = "session"
 	sessionTTL    = 30 * 24 * time.Hour
 )
@@ -22,16 +27,17 @@ const (
 // authData is the view model for the login/signup pages. Tab is empty so the
 // layout hides the nav for logged-out users.
 type authData struct {
-	Tab   string
-	Error string
+	Tab       string
+	Error     string
+	CSRFToken string
 }
 
 func (s *Server) loginForm(w http.ResponseWriter, r *http.Request) {
-	s.render(w, "login", "layout", authData{})
+	s.render(w, "login", "layout", authData{CSRFToken: csrfFrom(r.Context())})
 }
 
 func (s *Server) signupForm(w http.ResponseWriter, r *http.Request) {
-	s.render(w, "signup", "layout", authData{})
+	s.render(w, "signup", "layout", authData{CSRFToken: csrfFrom(r.Context())})
 }
 
 func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
@@ -41,14 +47,24 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 	if tz == "" {
 		tz = "UTC"
 	}
+	if _, err := time.LoadLocation(tz); err != nil {
+		tz = "UTC"
+	}
 	if email == "" || len(pw) < 8 {
-		s.render(w, "signup", "layout", authData{Error: "Enter an email and a password of at least 8 characters."})
+		s.render(w, "signup", "layout", authData{Error: "Enter an email and a password of at least 8 characters.", CSRFToken: csrfFrom(r.Context())})
 		return
+	}
+	if len(email) > maxEmailLen || !isValidEmail(email) {
+		s.render(w, "signup", "layout", authData{Error: "Please enter a valid email address.", CSRFToken: csrfFrom(r.Context())})
+		return
+	}
+	if len(pw) > maxPasswordLen {
+		pw = pw[:maxPasswordLen]
 	}
 
 	_, err := s.store.UserByEmail(r.Context(), email)
 	if err == nil {
-		s.render(w, "signup", "layout", authData{Error: "That email is already registered."})
+		s.render(w, "signup", "layout", authData{Error: "That email is already registered.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	if !errors.Is(err, store.ErrNotFound) {
@@ -73,10 +89,13 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	email := strings.TrimSpace(strings.ToLower(r.FormValue("email")))
 	pw := r.FormValue("password")
+	if len(pw) > maxPasswordLen {
+		pw = pw[:maxPasswordLen]
+	}
 
 	u, err := s.store.UserByEmail(r.Context(), email)
 	if err != nil || bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(pw)) != nil {
-		s.render(w, "login", "layout", authData{Error: "Incorrect email or password."})
+		s.render(w, "login", "layout", authData{Error: "Incorrect email or password.", CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	s.startSession(w, r, u.ID)
@@ -104,9 +123,19 @@ func (s *Server) startSession(w http.ResponseWriter, r *http.Request, uid int64)
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		Secure:   r.TLS != nil, // set true in production (behind TLS)
+		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https",
 		Expires:  exp,
 	})
+}
+
+// isValidEmail performs basic email format validation.
+func isValidEmail(email string) bool {
+	at := strings.LastIndex(email, "@")
+	if at < 1 {
+		return false
+	}
+	domain := email[at+1:]
+	return strings.Contains(domain, ".")
 }
 
 func randToken() string {

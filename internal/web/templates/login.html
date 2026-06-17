@@ -4,6 +4,7 @@
   <h1>Welcome back</h1>
   {{if .Error}}<p class="err">{{.Error}}</p>{{end}}
   <form method="post" action="/login" class="authform">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <label>Email
       <input type="email" name="email" autocomplete="email" required autofocus>
     </label>

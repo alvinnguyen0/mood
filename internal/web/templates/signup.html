@@ -4,6 +4,7 @@
   <h1>Create your account</h1>
   {{if .Error}}<p class="err">{{.Error}}</p>{{end}}
   <form method="post" action="/signup" class="authform">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
     <label>Email
       <input type="email" name="email" autocomplete="email" required autofocus>
     </label>

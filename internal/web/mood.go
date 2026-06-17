@@ -14,19 +14,23 @@ type todayCard struct {
 	Today      string
 	TodayLevel int
 	Faces      []service.FaceInfo
+	CSRFToken  string
 }
 
 type youData struct {
 	Tab string
 	todayCard
-	Grid    service.Grid
-	Current int
-	Longest int
+	Grid       service.Grid
+	Current    int
+	Longest    int
+	EntryCount int
 }
 
 type everyoneData struct {
-	Tab  string
-	Grid service.Grid
+	Tab        string
+	Grid       service.Grid
+	EntryCount int
+	CSRFToken  string
 }
 
 func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
@@ -46,12 +50,14 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cur, longest := service.Streaks(dates, today)
+	csrf := csrfFrom(r.Context())
 	data := youData{
-		Tab:       "you",
-		todayCard: todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces()},
-		Grid:      service.BuildGrid(today, levels),
-		Current:   cur,
-		Longest:   longest,
+		Tab:        "you",
+		todayCard:  todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces(), CSRFToken: csrf},
+		Grid:       service.BuildGrid(today, levels),
+		Current:    cur,
+		Longest:    longest,
+		EntryCount: len(moods),
 	}
 	s.render(w, "you", "layout", data)
 }
@@ -72,7 +78,7 @@ func (s *Server) logMood(w http.ResponseWriter, r *http.Request) {
 
 	// htmx: swap just the today card. Plain form: redirect (Post/Redirect/Get).
 	if r.Header.Get("HX-Request") == "true" {
-		s.render(w, "you", "todaycard", todayCard{Today: today, TodayLevel: lvl, Faces: service.Faces()})
+		s.render(w, "you", "todaycard", todayCard{Today: today, TodayLevel: lvl, Faces: service.Faces(), CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	http.Redirect(w, r, "/you", http.StatusSeeOther)
@@ -93,6 +99,6 @@ func (s *Server) everyonePage(w http.ResponseWriter, r *http.Request) {
 
 	// Use the viewer's timezone to frame "today" / the grid window.
 	today := service.TodayStr(u.Timezone)
-	data := everyoneData{Tab: "everyone", Grid: service.BuildAvgGrid(today, avgs)}
+	data := everyoneData{Tab: "everyone", Grid: service.BuildAvgGrid(today, avgs), EntryCount: len(rows), CSRFToken: csrfFrom(r.Context())}
 	s.render(w, "everyone", "layout", data)
 }

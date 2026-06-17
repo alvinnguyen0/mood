@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"time"
 
 	"mood-tracker/internal/store"
 	"mood-tracker/internal/web"
@@ -24,6 +27,24 @@ func main() {
 	if err != nil {
 		log.Fatalf("init server: %v", err)
 	}
+
+	// Background session cleanup
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer stop()
+	go func() {
+		ticker := time.NewTicker(1 * time.Hour)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if err := st.DeleteExpiredSessions(context.Background()); err != nil {
+					log.Printf("session cleanup: %v", err)
+				}
+			case <-ctx.Done():
+				return
+			}
+		}
+	}()
 
 	addr := os.Getenv("ADDR")
 	if addr == "" {

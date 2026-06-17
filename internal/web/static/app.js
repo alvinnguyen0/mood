@@ -24,5 +24,25 @@
     var el = e.target.closest(".cell[data-tip]");
     if (el) { place(el); } else { hide(); }
   });
+
+  var touchTimer;
+  document.addEventListener("touchstart", function (e) {
+    var el = e.target.closest(".cell[data-tip]");
+    if (el) {
+      e.preventDefault();
+      place(el);
+    }
+  }, { passive: false });
+  document.addEventListener("touchend", function (e) {
+    if (e.target.closest(".cell[data-tip]")) {
+      clearTimeout(touchTimer);
+      touchTimer = setTimeout(hide, 1500);
+    }
+  });
+  document.addEventListener("touchcancel", function () {
+    clearTimeout(touchTimer);
+    hide();
+  });
+
   window.addEventListener("scroll", hide, { passive: true });
 })();

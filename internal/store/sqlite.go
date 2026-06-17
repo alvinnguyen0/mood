@@ -110,6 +110,13 @@ func (s *SQLite) DeleteSession(ctx context.Context, id string) error {
 	return err
 }
 
+func (s *SQLite) DeleteExpiredSessions(ctx context.Context) error {
+	_, err := s.db.ExecContext(ctx,
+		`DELETE FROM sessions WHERE expires_at < ?`,
+		time.Now().UTC().Format(timeFmt))
+	return err
+}
+
 // --- mood entries ---
 
 func (s *SQLite) UpsertMood(ctx context.Context, userID int64, date string, level int) error {

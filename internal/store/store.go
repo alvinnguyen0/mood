@@ -19,6 +19,7 @@ type Store interface {
 	CreateSession(ctx context.Context, s model.Session) error
 	SessionByID(ctx context.Context, id string) (*model.Session, error)
 	DeleteSession(ctx context.Context, id string) error
+	DeleteExpiredSessions(ctx context.Context) error
 
 	// Mood entries
 	UpsertMood(ctx context.Context, userID int64, date string, level int) error
