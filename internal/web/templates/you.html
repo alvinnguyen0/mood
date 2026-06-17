@@ -16,9 +16,8 @@
   <h2>Your year</h2>
   {{if eq .EntryCount 0}}
   <p class="empty-state">Your grid is empty — log your first mood above to start filling it in!</p>
-  {{else}}
+  {{end}}
   {{template "moodgrid" .Grid}}
   {{template "legend" .}}
-  {{end}}
 </section>
 {{end}}
