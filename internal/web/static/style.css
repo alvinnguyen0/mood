@@ -96,7 +96,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   margin-bottom: 4px;
   min-width: max-content;
 }
-.mlabel { width: calc(var(--cell) + var(--cell-gap)); white-space: nowrap; flex-shrink: 0; }
+.mlabel { width: var(--cell); white-space: nowrap; flex-shrink: 0; }
 .gridbody { display: flex; gap: 8px; min-width: max-content; }
 .wdays {
   display: grid;
