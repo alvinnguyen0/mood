@@ -8,9 +8,8 @@
 <section class="gridsection">
   {{if eq .EntryCount 0}}
   <p class="empty-state">No moods have been logged yet. Be the first to share how you're feeling!</p>
-  {{else}}
+  {{end}}
   {{template "moodgrid" .Grid}}
   {{template "legend" .}}
-  {{end}}
 </section>
 {{end}}
