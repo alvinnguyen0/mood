@@ -1,3 +1,5 @@
 mood.db
 mood.db-wal
 mood.db-shm
+mood-tracker
+*.db
