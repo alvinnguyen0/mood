@@ -85,8 +85,8 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 .streak .lbl { color: var(--muted); font-size: .85rem; }
 
 /* --- grid --- */
-.gridsection { margin-top: 8px; }
-.gridwrap { overflow-x: auto; padding-bottom: 6px; }
+.gridsection { margin-top: 8px; overflow: hidden; }
+.gridwrap { overflow-x: auto; padding-bottom: 6px; max-width: 100%; }
 .months {
   display: flex;
   gap: var(--cell-gap);
@@ -96,7 +96,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   margin-bottom: 4px;
   min-width: max-content;
 }
-.mlabel { width: var(--cell); white-space: nowrap; }
+.mlabel { width: calc(var(--cell) + var(--cell-gap)); white-space: nowrap; flex-shrink: 0; }
 .gridbody { display: flex; gap: 8px; min-width: max-content; }
 .wdays {
   display: grid;
