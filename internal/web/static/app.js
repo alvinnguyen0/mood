@@ -1,3 +1,11 @@
+// Scroll grids to the right so the most recent entries are visible.
+(function () {
+  var wraps = document.querySelectorAll(".gridwrap");
+  for (var i = 0; i < wraps.length; i++) {
+    wraps[i].scrollLeft = wraps[i].scrollWidth;
+  }
+})();
+
 // Lightweight tooltip for activity-grid cells. Works on hover (desktop) and
 // tap (touch). Uses event delegation so it also covers htmx-swapped content.
 (function () {
