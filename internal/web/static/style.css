@@ -10,11 +10,11 @@
   --empty:          #dce0e8;  /* Crust */
   --err-bg:         #fce4ec;
   --err-fg:         #d20f39;  /* Red */
-  --mood-1:         #7287fd;  /* Latte Lavender — cool purple */
-  --mood-2:         #04a5e5;  /* Latte Sky — bright teal-blue */
-  --mood-3:         #40a02b;  /* Latte Green */
-  --mood-4:         #df8e1d;  /* Latte Yellow — golden amber */
-  --mood-5:         #fe640b;  /* Latte Peach — vibrant orange */
+  --mood-1:         #8caaee;  /* soft periwinkle */
+  --mood-2:         #56bcd4;  /* teal-blue */
+  --mood-3:         #6abf82;  /* sage green */
+  --mood-4:         #d4a84b;  /* warm gold — visible on light bg */
+  --mood-5:         #d4704a;  /* rich coral-orange */
   --cell:           12px;
   --cell-gap:       3px;
   --wdays-w:        28px;
