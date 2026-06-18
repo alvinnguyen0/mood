@@ -24,5 +24,7 @@ CREATE TABLE IF NOT EXISTS mood_entries (
     UNIQUE (user_id, entry_date)
 );
 
+ALTER TABLE mood_entries ADD COLUMN IF NOT EXISTS note TEXT;
+
 CREATE INDEX IF NOT EXISTS idx_mood_user_date ON mood_entries(user_id, entry_date);
 CREATE INDEX IF NOT EXISTS idx_mood_date      ON mood_entries(entry_date);

@@ -3,6 +3,9 @@
 <section class="today">
   <h1>how everyone feels</h1>
   <p class="sub">each cell is the average mood across everyone who logged that day. individual entries stay private.</p>
+  {{if gt .TodayCount 0}}
+  <p class="today-count"><strong>{{.TodayCount}}</strong> {{if eq .TodayCount 1}}person has{{else}}people have{{end}} logged today</p>
+  {{end}}
 </section>
 
 <section class="gridsection">

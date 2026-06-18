@@ -117,24 +117,31 @@ func (s *Postgres) DeleteExpiredSessions(ctx context.Context) error {
 
 // --- mood entries ---
 
-func (s *Postgres) UpsertMood(ctx context.Context, userID int64, date string, level int) error {
+func (s *Postgres) UpsertMood(ctx context.Context, userID int64, date string, level int, note string) error {
 	now := time.Now().UTC().Format(timeFmt)
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO mood_entries(user_id, entry_date, mood_level, created_at, updated_at)
-		 VALUES($1,$2,$3,$4,$5)
+		`INSERT INTO mood_entries(user_id, entry_date, mood_level, note, created_at, updated_at)
+		 VALUES($1,$2,$3,$4,$5,$6)
 		 ON CONFLICT(user_id, entry_date)
-		 DO UPDATE SET mood_level = excluded.mood_level, updated_at = excluded.updated_at`,
-		userID, date, level, now, now)
+		 DO UPDATE SET mood_level = excluded.mood_level, note = excluded.note, updated_at = excluded.updated_at`,
+		userID, date, level, note, now, now)
 	return err
+}
+
+func (s *Postgres) TodayCount(ctx context.Context, date string) (int, error) {
+	var n int
+	err := s.db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM mood_entries WHERE entry_date = $1`, date).Scan(&n)
+	return n, err
 }
 
 func (s *Postgres) MoodByUserAndDate(ctx context.Context, userID int64, date string) (*model.MoodEntry, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT user_id, entry_date, mood_level FROM mood_entries
+		`SELECT user_id, entry_date, mood_level, COALESCE(note, '') FROM mood_entries
 		 WHERE user_id = $1 AND entry_date = $2`,
 		userID, date)
 	var m model.MoodEntry
-	if err := row.Scan(&m.UserID, &m.Date, &m.Level); err != nil {
+	if err := row.Scan(&m.UserID, &m.Date, &m.Level, &m.Note); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
@@ -145,7 +152,7 @@ func (s *Postgres) MoodByUserAndDate(ctx context.Context, userID int64, date str
 
 func (s *Postgres) MoodsForUser(ctx context.Context, userID int64) ([]model.MoodEntry, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT user_id, entry_date, mood_level FROM mood_entries
+		`SELECT user_id, entry_date, mood_level, COALESCE(note, '') FROM mood_entries
 		 WHERE user_id = $1 ORDER BY entry_date`,
 		userID)
 	if err != nil {
@@ -155,7 +162,7 @@ func (s *Postgres) MoodsForUser(ctx context.Context, userID int64) ([]model.Mood
 	var out []model.MoodEntry
 	for rows.Next() {
 		var m model.MoodEntry
-		if err := rows.Scan(&m.UserID, &m.Date, &m.Level); err != nil {
+		if err := rows.Scan(&m.UserID, &m.Date, &m.Level, &m.Note); err != nil {
 			return nil, err
 		}
 		out = append(out, m)

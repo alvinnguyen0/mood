@@ -14,6 +14,7 @@ import (
 type todayCard struct {
 	Today      string
 	TodayLevel int
+	TodayNote  string
 	Faces      []service.FaceInfo
 	CSRFToken  string
 }
@@ -27,6 +28,7 @@ type youData struct {
 	Current    int
 	Longest    int
 	EntryCount int
+	Trends     service.Trends
 }
 
 type everyoneData struct {
@@ -35,6 +37,7 @@ type everyoneData struct {
 	Legend     []template.CSS
 	Grid       service.Grid
 	EntryCount int
+	TodayCount int
 	CSRFToken  string
 }
 
@@ -51,24 +54,26 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 		s.serverError(w, err)
 		return
 	}
-	levels := make(map[string]int, len(moods))
+	entries := make(map[string]service.UserEntry, len(moods))
 	dates := make([]string, 0, len(moods))
 	for _, m := range moods {
-		levels[m.Date] = m.Level
+		entries[m.Date] = service.UserEntry{Level: m.Level, Note: m.Note}
 		dates = append(dates, m.Date)
 	}
 
 	cur, longest := service.Streaks(dates, today)
 	csrf := csrfFrom(r.Context())
+	todayEntry := entries[today]
 	data := youData{
 		Tab:        "you",
 		LoggedIn:   true,
 		Legend:     service.Palette(),
-		todayCard:  todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces(), CSRFToken: csrf},
-		Grid:       service.BuildUserGrid(today, levels),
+		todayCard:  todayCard{Today: today, TodayLevel: todayEntry.Level, TodayNote: todayEntry.Note, Faces: service.Faces(), CSRFToken: csrf},
+		Grid:       service.BuildUserGrid(today, entries),
 		Current:    cur,
 		Longest:    longest,
 		EntryCount: len(moods),
+		Trends:     service.ComputeTrends(today, moods),
 	}
 	s.render(w, "you", "layout", data)
 }
@@ -85,15 +90,18 @@ func (s *Server) logMood(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid mood level", http.StatusBadRequest)
 		return
 	}
+	note := r.FormValue("note")
+	if len(note) > 50 {
+		note = note[:50]
+	}
 	today := service.TodayStr(u.Timezone)
-	if err := s.store.UpsertMood(r.Context(), u.ID, today, lvl); err != nil {
+	if err := s.store.UpsertMood(r.Context(), u.ID, today, lvl, note); err != nil {
 		s.serverError(w, err)
 		return
 	}
 
-	// htmx: swap just the today card. Plain form: redirect (Post/Redirect/Get).
 	if r.Header.Get("HX-Request") == "true" {
-		s.render(w, "you", "todaycard", todayCard{Today: today, TodayLevel: lvl, Faces: service.Faces(), CSRFToken: csrfFrom(r.Context())})
+		s.render(w, "you", "todaycard", todayCard{Today: today, TodayLevel: lvl, TodayNote: note, Faces: service.Faces(), CSRFToken: csrfFrom(r.Context())})
 		return
 	}
 	http.Redirect(w, r, "/you", http.StatusSeeOther)
@@ -117,12 +125,14 @@ func (s *Server) everyonePage(w http.ResponseWriter, r *http.Request) {
 		tz = u.Timezone
 	}
 	today := service.TodayStr(tz)
+	tc, _ := s.store.TodayCount(r.Context(), today)
 	data := everyoneData{
 		Tab:        "everyone",
 		LoggedIn:   u != nil,
 		Legend:     service.Palette(),
 		Grid:       service.BuildAvgGrid(today, avgs),
 		EntryCount: len(rows),
+		TodayCount: tc,
 		CSRFToken:  csrfFrom(r.Context()),
 	}
 	s.render(w, "everyone", "layout", data)
