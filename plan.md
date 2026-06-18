@@ -294,16 +294,74 @@ Project layout, chi server, SQLite connection (WAL), migrations for `users`,
 - Aggregate query (avg + count per date).
 - Everyone grid + tab + tooltips (date, average, people count).
 
-### Phase 4 — Polish
+### Phase 4 — Polish ✅
 - Responsive/mobile pass: horizontal-scroll grid, stacked layout, touch
   tooltips.
 - Color/whitespace refinement, empty states.
 - Harden timezone edges, CSRF, session expiry, input validation.
 - **Stretch:** Postgres adapter, basic tests for streak/aggregate logic.
 
+### Phase 5 — Social proof & engagement
+- **"X people logged today" counter** on the Everyone page. Live count of
+  today's entries creates social proof and FOMO. Small query
+  (`COUNT(*) WHERE entry_date = today`), shown as a subtle line above or
+  below the everyone grid.
+- **One-word note per entry.** Add a nullable `note` column (max ~50 chars) to
+  `mood_entries`. Shown in the mood picker as an optional text field, and in
+  cell tooltips on the You page. Keeps logging fast but adds texture for
+  looking back at *why* a day felt a certain way.
+
+### Phase 6 — You page trends & insights
+- **Weekly average with delta** — "your average this week: 3.8 (+0.4 vs last
+  week)" displayed near the streaks. Gives a reason to check back beyond
+  just logging.
+- **Most common mood** — which face appears most often across all entries.
+- **Day-of-week breakdown** — show which weekdays tend to be best/worst
+  (bar chart or simple list: "your best day is Saturday, worst is Monday").
+- **Monthly averages** — small trend line or list of monthly averages so
+  users can spot seasonal patterns.
+- **Time-of-day insight** (requires `logged_at` timestamp on entries) —
+  "you tend to feel better when you log in the morning."
+
+### Phase 7 — Shareable mood recap
+- **Year-in-review / mood recap page** — a single shareable page (or
+  screenshot-friendly layout) showing the user's grid, average mood,
+  longest streak, most common mood, and monthly trend. Accessed via a
+  unique share link (`/share/:token`).
+- Add `share_token` (TEXT UNIQUE, nullable) to `users`. Generated on
+  demand when the user first requests their share link.
+- The share page is public (no auth) but read-only and contains no PII
+  beyond what the user chose to share.
+- **This is the primary viral mechanic:** users screenshot or link their
+  recap, others see it and sign up.
+
 ---
 
-## 10. Suggested Project Layout
+## 10. Future Schema Additions
+
+| Table | Column | Type | Phase | Enables |
+|-------|--------|------|-------|---------|
+| `mood_entries` | `note` | TEXT (nullable, max ~50 chars) | 5 | one-word/short note per day |
+| `mood_entries` | `logged_at` | TIMESTAMP | 6 | time-of-day analysis |
+| `users` | `display_name` | TEXT (nullable) | 7 | sharing features |
+| `users` | `share_token` | TEXT UNIQUE (nullable) | 7 | public recap link |
+| `users` | `signup_source` | TEXT (nullable) | — | growth analytics |
+
+---
+
+## 11. Features intentionally excluded
+
+These add complexity that breaks the "minimal and calm" ethos:
+- Comments / social feed / reactions to others' moods
+- Friend lists or following
+- Push notifications
+- Gamification badges
+- Long-form mood journaling
+- Leaderboards
+
+---
+
+## 12. Suggested Project Layout
 
 ```
 mood-tracker/
