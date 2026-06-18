@@ -28,6 +28,7 @@ const (
 // layout hides the nav for logged-out users.
 type authData struct {
 	Tab       string
+	LoggedIn  bool
 	Error     string
 	CSRFToken string
 }
