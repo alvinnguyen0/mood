@@ -6,7 +6,7 @@
 <title>{{block "title" .}}Mood{{end}} · mood</title>
 <link rel="stylesheet" href="/static/style.css">
 <script>
-  (function(){var t=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();
+  (function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();
 </script>
 <script src="https://unpkg.com/htmx.org@1.9.12" defer></script>
 </head>
@@ -15,12 +15,12 @@
   <div class="brand">mood</div>
   {{if .Tab}}
   <nav class="tabs">
-    <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">you</a>
     <a href="/everyone" class="{{if eq .Tab "everyone"}}active{{end}}">everyone</a>
+    <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">you</a>
   </nav>
   {{end}}
   <div class="nav-right">
-    {{if .Tab}}
+    {{if .LoggedIn}}
     <form method="post" action="/logout" class="logout"><input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><button type="submit">log out</button></form>
     {{end}}
     <button id="theme-toggle" class="theme-toggle" aria-label="toggle theme"></button>

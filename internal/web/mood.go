@@ -18,7 +18,8 @@ type todayCard struct {
 }
 
 type youData struct {
-	Tab string
+	Tab      string
+	LoggedIn bool
 	todayCard
 	Grid       service.Grid
 	Current    int
@@ -28,6 +29,7 @@ type youData struct {
 
 type everyoneData struct {
 	Tab        string
+	LoggedIn   bool
 	Grid       service.Grid
 	EntryCount int
 	CSRFToken  string
@@ -53,6 +55,7 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 	csrf := csrfFrom(r.Context())
 	data := youData{
 		Tab:        "you",
+		LoggedIn:   true,
 		todayCard:  todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces(), CSRFToken: csrf},
 		Grid:       service.BuildGrid(today, levels),
 		Current:    cur,
@@ -97,8 +100,17 @@ func (s *Server) everyonePage(w http.ResponseWriter, r *http.Request) {
 		avgs[a.Date] = a
 	}
 
-	// Use the viewer's timezone to frame "today" / the grid window.
-	today := service.TodayStr(u.Timezone)
-	data := everyoneData{Tab: "everyone", Grid: service.BuildAvgGrid(today, avgs), EntryCount: len(rows), CSRFToken: csrfFrom(r.Context())}
+	tz := "UTC"
+	if u != nil {
+		tz = u.Timezone
+	}
+	today := service.TodayStr(tz)
+	data := everyoneData{
+		Tab:        "everyone",
+		LoggedIn:   u != nil,
+		Grid:       service.BuildAvgGrid(today, avgs),
+		EntryCount: len(rows),
+		CSRFToken:  csrfFrom(r.Context()),
+	}
 	s.render(w, "everyone", "layout", data)
 }
