@@ -38,5 +38,5 @@ jobs:
           ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts
           ssh root@"$HOST" "
             docker pull ghcr.io/${{ github.repository }}:latest &&
-            docker compose up -d
+            cd ~/mood && docker compose up -d
           "
