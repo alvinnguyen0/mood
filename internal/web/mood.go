@@ -65,7 +65,7 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 		LoggedIn:   true,
 		Legend:     service.Palette(),
 		todayCard:  todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces(), CSRFToken: csrf},
-		Grid:       service.BuildGrid(today, levels),
+		Grid:       service.BuildUserGrid(today, levels),
 		Current:    cur,
 		Longest:    longest,
 		EntryCount: len(moods),

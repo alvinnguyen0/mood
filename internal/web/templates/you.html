@@ -13,11 +13,11 @@
 </section>
 
 <section class="gridsection">
-  <h2>your year</h2>
   {{if eq .EntryCount 0}}
-  <p class="empty-state">your grid is empty — log your first mood above to start filling it in!</p>
-  {{end}}
+  <p class="empty-state">log your first mood above — your history will appear here.</p>
+  {{else}}
   {{template "moodgrid" .Grid}}
   {{template "legend" .}}
+  {{end}}
 </section>
 {{end}}

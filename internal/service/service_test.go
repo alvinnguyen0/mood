@@ -71,25 +71,18 @@ func TestStreaks_Duplicates(t *testing.T) {
 	}
 }
 
-// --- BuildGrid tests ---
+// --- BuildUserGrid tests ---
 
-func TestBuildGrid_EmptyLevels(t *testing.T) {
-	g := BuildGrid(testToday, map[string]int{})
-	for _, w := range g.Weeks {
-		for _, c := range w {
-			if c.Future {
-				continue
-			}
-			if c.Color != emptyColor {
-				t.Fatalf("date %s: got color %s, want %s", c.Date, c.Color, emptyColor)
-			}
-		}
+func TestBuildUserGrid_EmptyLevels(t *testing.T) {
+	g := BuildUserGrid(testToday, map[string]int{})
+	if len(g.Weeks) != 0 {
+		t.Fatalf("expected empty grid for no entries, got %d weeks", len(g.Weeks))
 	}
 }
 
-func TestBuildGrid_KnownDate(t *testing.T) {
+func TestBuildUserGrid_KnownDate(t *testing.T) {
 	levels := map[string]int{"2025-03-10": 3}
-	g := BuildGrid(testToday, levels)
+	g := BuildUserGrid(testToday, levels)
 	var found bool
 	for _, w := range g.Weeks {
 		for _, c := range w {
@@ -99,7 +92,7 @@ func TestBuildGrid_KnownDate(t *testing.T) {
 				if c.Color != wantColor {
 					t.Fatalf("color: got %s, want %s", c.Color, wantColor)
 				}
-				wantTip := "2025-03-10 · \U0001F610 Neutral"
+				wantTip := "2025-03-10 · \U0001F610 neutral"
 				if c.Tip != wantTip {
 					t.Fatalf("tip: got %q, want %q", c.Tip, wantTip)
 				}
@@ -137,7 +130,7 @@ func TestBuildAvgGrid_KnownDate(t *testing.T) {
 		for _, c := range w {
 			if c.Date == "2025-03-10" {
 				found = true
-				wantColor := palette[3] // round(3.7)=4 → index 3
+				wantColor := colorForAvg(3.7) // continuous HSL spectrum
 				if c.Color != wantColor {
 					t.Fatalf("color: got %s, want %s", c.Color, wantColor)
 				}
