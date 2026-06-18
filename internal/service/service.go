@@ -46,11 +46,22 @@ func Face(level int) string {
 	return faceEmoji[level-1]
 }
 
-// Palette exposes the five band colors (low -> high) for the legend.
+// Palette exposes the five band colors (low -> high) for the you-grid legend.
 func Palette() []template.CSS { return palette[:] }
 
-// colorForLevel maps a value in [1,5] to a band color by rounding to the
-// nearest level. The Everyone view shows the precise average in the tooltip.
+// SpectrumLegend returns n evenly-spaced colors across the red→green spectrum
+// for use in the everyone-grid legend.
+func SpectrumLegend(n int) []template.CSS {
+	out := make([]template.CSS, n)
+	for i := range out {
+		v := 1 + float64(i)*4/float64(n-1)
+		out[i] = colorForAvg(v)
+	}
+	return out
+}
+
+// colorForLevel maps an integer level [1,5] to the monochromatic palette used
+// by the personal (you) grid.
 func colorForLevel(v float64) template.CSS {
 	if v <= 0 {
 		return emptyColor
@@ -63,6 +74,23 @@ func colorForLevel(v float64) template.CSS {
 		i = 5
 	}
 	return palette[i-1]
+}
+
+// colorForAvg maps a float average [1,5] to a continuous red→amber→green hue.
+// Using hsl() directly lets fractional averages produce genuinely distinct colors.
+func colorForAvg(v float64) template.CSS {
+	if v <= 0 {
+		return emptyColor
+	}
+	t := (v - 1) / 4
+	if t < 0 {
+		t = 0
+	}
+	if t > 1 {
+		t = 1
+	}
+	hue := t * 120 // 0° = red, 60° = amber, 120° = green
+	return template.CSS(fmt.Sprintf("hsl(%.1f,65%%,48%%)", hue))
 }
 
 func parseDate(d string) time.Time {
@@ -176,7 +204,7 @@ func BuildAvgGrid(today string, avgs map[string]model.DayAverage) Grid {
 			c.Tip = ds + " \u00B7 no entries"
 			return c
 		}
-		c.Color = colorForLevel(a.Avg)
+		c.Color = colorForAvg(a.Avg)
 		c.Tip = fmt.Sprintf("%s \u00B7 avg %.1f \u00B7 %d %s", ds, a.Avg, a.Count, plural(a.Count, "person", "people"))
 		return c
 	})

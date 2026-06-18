@@ -38,8 +38,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // so each page's {{define "content"}} stays isolated.
 func (s *Server) parseTemplates() error {
 	funcs := template.FuncMap{
-		"face":    service.Face,
-		"palette": service.Palette,
+		"face": service.Face,
 	}
 	partials := []string{
 		"templates/partials/todaycard.html",

@@ -10,11 +10,11 @@
   --empty:          #dce0e8;  /* Crust */
   --err-bg:         #fce4ec;
   --err-fg:         #d20f39;  /* Red */
-  --mood-1:         #8caaee;  /* soft periwinkle */
-  --mood-2:         #56bcd4;  /* teal-blue */
-  --mood-3:         #6abf82;  /* sage green */
-  --mood-4:         #d4a84b;  /* warm gold — visible on light bg */
-  --mood-5:         #d4704a;  /* rich coral-orange */
+  --mood-1:         #c8d5f5;  /* pale periwinkle */
+  --mood-2:         #9db4ee;
+  --mood-3:         #6b8fe5;
+  --mood-4:         #3f68d0;
+  --mood-5:         #1e46a8;  /* deep navy */
   --cell:           12px;
   --cell-gap:       3px;
   --wdays-w:        28px;
@@ -32,11 +32,11 @@
   --empty:          #181825;  /* Mantle */
   --err-bg:         #4a1524;
   --err-fg:         #f38ba8;  /* Red */
-  --mood-1:         #6c7086;  /* Overlay0 — muted step above empty */
-  --mood-2:         #89b4fa;  /* Mocha Blue */
-  --mood-3:         #a6e3a1;  /* Mocha Green */
-  --mood-4:         #f9e2af;  /* Mocha Yellow */
-  --mood-5:         #fab387;  /* Mocha Peach */
+  --mood-1:         #3b4a7a;  /* muted dark blue */
+  --mood-2:         #5068a8;
+  --mood-3:         #6a88d8;
+  --mood-4:         #8aaae8;
+  --mood-5:         #adc4f5;  /* bright periwinkle */
 }
 
 * { box-sizing: border-box; }

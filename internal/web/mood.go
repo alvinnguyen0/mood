@@ -1,6 +1,7 @@
 package web
 
 import (
+	"html/template"
 	"net/http"
 	"strconv"
 
@@ -20,6 +21,7 @@ type todayCard struct {
 type youData struct {
 	Tab      string
 	LoggedIn bool
+	Legend   []template.CSS
 	todayCard
 	Grid       service.Grid
 	Current    int
@@ -30,6 +32,7 @@ type youData struct {
 type everyoneData struct {
 	Tab        string
 	LoggedIn   bool
+	Legend     []template.CSS
 	Grid       service.Grid
 	EntryCount int
 	CSRFToken  string
@@ -56,6 +59,7 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 	data := youData{
 		Tab:        "you",
 		LoggedIn:   true,
+		Legend:     service.Palette(),
 		todayCard:  todayCard{Today: today, TodayLevel: levels[today], Faces: service.Faces(), CSRFToken: csrf},
 		Grid:       service.BuildGrid(today, levels),
 		Current:    cur,
@@ -108,6 +112,7 @@ func (s *Server) everyonePage(w http.ResponseWriter, r *http.Request) {
 	data := everyoneData{
 		Tab:        "everyone",
 		LoggedIn:   u != nil,
+		Legend:     service.SpectrumLegend(9),
 		Grid:       service.BuildAvgGrid(today, avgs),
 		EntryCount: len(rows),
 		CSRFToken:  csrfFrom(r.Context()),
