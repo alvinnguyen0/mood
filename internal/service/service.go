@@ -13,9 +13,9 @@ const dateFmt = "2006-01-02"
 
 // Palette colors for mood levels 1..5 (cool/low -> warm/high). Empty days use
 // emptyColor. Colors are presentation only; mood_level is the source of truth.
-var palette = [5]string{"#5b7fa6", "#6fa8a0", "#e6c35c", "#f0954e", "#f06d4e"}
+var palette = [5]string{"var(--mood-1)", "var(--mood-2)", "var(--mood-3)", "var(--mood-4)", "var(--mood-5)"}
 
-const emptyColor = "#ebedf0"
+const emptyColor = "var(--empty)"
 
 var faceEmoji = [5]string{"\U0001F641", "\U0001F615", "\U0001F610", "\U0001F642", "\U0001F604"}
 var faceLabel = [5]string{"Frown", "Meh", "Neutral", "Slight smile", "Big smile"}

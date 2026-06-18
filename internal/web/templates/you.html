@@ -1,7 +1,7 @@
-{{define "title"}}You{{end}}
+{{define "title"}}you{{end}}
 {{define "content"}}
 <section class="today">
-  <h1>How are you today?</h1>
+  <h1>how are you today?</h1>
   {{template "todaycard" .}}
 </section>
 
@@ -13,9 +13,9 @@
 </section>
 
 <section class="gridsection">
-  <h2>Your year</h2>
+  <h2>your year</h2>
   {{if eq .EntryCount 0}}
-  <p class="empty-state">Your grid is empty — log your first mood above to start filling it in!</p>
+  <p class="empty-state">your grid is empty — log your first mood above to start filling it in!</p>
   {{end}}
   {{template "moodgrid" .Grid}}
   {{template "legend" .}}

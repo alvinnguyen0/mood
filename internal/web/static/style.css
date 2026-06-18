@@ -1,16 +1,47 @@
+/* Catppuccin Latte — light */
 :root {
-  --bg: #ffffff;
-  --fg: #1c2024;
-  --muted: #8a9099;
-  --line: #e6e8eb;
-  --accent: #5b7fa6;
-  --empty: #ebedf0;
-  --cell: 12px;
-  --cell-gap: 3px;
-  --wdays-w: 28px;
+  --bg:             #eff1f5;  /* Base */
+  --surface:        #e6e9ef;  /* Mantle */
+  --fg:             #4c4f69;  /* Text */
+  --muted:          #9ca0b0;  /* Overlay0 */
+  --line:           #ccd0da;  /* Surface0 */
+  --accent:         #8839ef;  /* Mauve */
+  --accent-shadow:  rgba(136, 57, 239, .20);
+  --empty:          #dce0e8;  /* Crust */
+  --err-bg:         #fce4ec;
+  --err-fg:         #d20f39;  /* Red */
+  --mood-1:         #7287fd;  /* Latte Lavender — cool purple */
+  --mood-2:         #04a5e5;  /* Latte Sky — bright teal-blue */
+  --mood-3:         #40a02b;  /* Latte Green */
+  --mood-4:         #df8e1d;  /* Latte Yellow — golden amber */
+  --mood-5:         #fe640b;  /* Latte Peach — vibrant orange */
+  --cell:           12px;
+  --cell-gap:       3px;
+  --wdays-w:        28px;
+}
+
+/* Catppuccin Mocha — dark */
+[data-theme="dark"] {
+  --bg:             #1e1e2e;  /* Base */
+  --surface:        #313244;  /* Surface0 */
+  --fg:             #cdd6f4;  /* Text */
+  --muted:          #6c7086;  /* Overlay0 */
+  --line:           #45475a;  /* Surface1 */
+  --accent:         #cba6f7;  /* Mauve */
+  --accent-shadow:  rgba(203, 166, 247, .20);
+  --empty:          #181825;  /* Mantle */
+  --err-bg:         #4a1524;
+  --err-fg:         #f38ba8;  /* Red */
+  --mood-1:         #6c7086;  /* Overlay0 — muted step above empty */
+  --mood-2:         #89b4fa;  /* Mocha Blue */
+  --mood-3:         #a6e3a1;  /* Mocha Green */
+  --mood-4:         #f9e2af;  /* Mocha Yellow */
+  --mood-5:         #fab387;  /* Mocha Peach */
 }
 
 * { box-sizing: border-box; }
+
+html { overflow-x: hidden; }
 
 body {
   margin: 0;
@@ -21,7 +52,7 @@ body {
 }
 
 main {
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
   padding: 24px 20px 64px;
 }
@@ -37,7 +68,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   gap: 20px;
   padding: 14px 20px;
   border-bottom: 1px solid var(--line);
-  max-width: 860px;
+  max-width: 900px;
   margin: 0 auto;
 }
 .brand { font-weight: 700; letter-spacing: -0.02em; }
@@ -50,12 +81,23 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   border-bottom: 2px solid transparent;
 }
 .tabs a.active { color: var(--fg); border-bottom-color: var(--accent); }
-.logout { margin-left: auto; }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
 .logout button {
   background: none; border: none; color: var(--muted);
   cursor: pointer; font: inherit; padding: 0;
 }
 .logout button:hover { color: var(--fg); }
+
+/* --- theme toggle --- */
+.theme-toggle {
+  background: none; border: none;
+  cursor: pointer; padding: 2px 4px;
+  font-size: 1rem; line-height: 1;
+  color: var(--muted);
+  border-radius: 6px;
+  transition: color .15s ease;
+}
+.theme-toggle:hover { color: var(--fg); }
 
 /* --- today picker --- */
 .today { margin-bottom: 28px; }
@@ -66,14 +108,14 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   width: 56px; height: 56px;
   border: 1px solid var(--line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--bg);
   cursor: pointer;
   transition: transform .05s ease, border-color .1s ease, box-shadow .1s ease;
 }
 .face:hover { transform: translateY(-2px); border-color: var(--accent); }
 .face.selected {
   border-color: var(--accent);
-  box-shadow: 0 0 0 2px rgba(91,127,166,.25);
+  box-shadow: 0 0 0 2px var(--accent-shadow);
 }
 .loggednote { color: var(--muted); font-size: .9rem; margin: 10px 2px 0; }
 
@@ -96,7 +138,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   margin-bottom: 4px;
   min-width: max-content;
 }
-.mlabel { width: var(--cell); white-space: nowrap; }
+.mlabel { width: var(--cell); white-space: nowrap; flex-shrink: 0; }
 .gridbody { display: flex; gap: 8px; min-width: max-content; }
 .wdays {
   display: grid;
@@ -133,8 +175,8 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 .tip {
   position: absolute;
   transform: translate(-50%, -100%);
-  background: #1c2024;
-  color: #fff;
+  background: var(--fg);
+  color: var(--bg);
   font-size: .75rem;
   padding: 4px 8px;
   border-radius: 6px;
@@ -150,7 +192,8 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 .authform label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--muted); }
 .authform input {
   font: inherit; padding: 10px 12px;
-  border: 1px solid var(--line); border-radius: 10px; color: var(--fg);
+  border: 1px solid var(--line); border-radius: 10px;
+  color: var(--fg); background: var(--surface);
 }
 .authform input:focus { outline: none; border-color: var(--accent); }
 .authform button {
@@ -158,26 +201,21 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   padding: 11px; border: none; border-radius: 10px;
   background: var(--accent); color: #fff; cursor: pointer;
 }
-.authform button:hover { filter: brightness(1.05); }
+.authform button:hover { filter: brightness(1.1); }
 .hint { color: var(--muted); font-size: .8rem; margin: -4px 0 0; }
 .alt { color: var(--muted); margin-top: 18px; }
 .alt a { color: var(--accent); }
 .err {
-  background: #fdecea; color: #b3261e;
+  background: var(--err-bg); color: var(--err-fg);
   padding: 10px 12px; border-radius: 10px; font-size: .9rem;
 }
 
 /* --- empty state --- */
-.empty-state {
-  color: var(--muted);
-  font-size: .95rem;
-  margin: 18px 0;
-}
+.empty-state { color: var(--muted); font-size: .95rem; margin: 18px 0; }
 
 /* --- responsive --- */
 @media (max-width: 600px) {
-  .nav { flex-direction: column; gap: 10px; align-items: center; text-align: center; }
-  .logout { margin-left: 0; }
+  .nav { flex-wrap: wrap; gap: 10px; }
   .face { width: 48px; height: 48px; font-size: 26px; }
   .streak .num { font-size: 1.4rem; }
   .streaks { gap: 20px; }
