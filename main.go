@@ -10,14 +10,16 @@ import (
 
 	"mood-tracker/internal/store"
 	"mood-tracker/internal/web"
+
+	_ "time/tzdata" // embed timezone database for scratch-based Docker image
 )
 
 func main() {
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
-		dsn = "file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)"
+		dsn = "postgres://mood:mood@localhost:5432/mood?sslmode=disable"
 	}
-	st, err := store.OpenSQLite(dsn)
+	st, err := store.OpenPostgres(dsn)
 	if err != nil {
 		log.Fatalf("open db: %v", err)
 	}

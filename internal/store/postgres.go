@@ -9,7 +9,7 @@ import (
 
 	"mood-tracker/internal/model"
 
-	_ "modernc.org/sqlite" // pure-Go driver, registered as "sqlite"
+	_ "github.com/lib/pq"
 )
 
 // ErrNotFound is returned when a lookup matches no row.
@@ -18,18 +18,15 @@ var ErrNotFound = errors.New("not found")
 //go:embed schema.sql
 var schemaSQL string
 
-// timeFmt is how timestamps are stored as TEXT, to avoid driver-specific
-// datetime handling. Dates (entry_date) are stored as plain "YYYY-MM-DD".
+// timeFmt is how timestamps are stored as TEXT.
 const timeFmt = time.RFC3339
 
-type SQLite struct{ db *sql.DB }
+type Postgres struct{ db *sql.DB }
 
-// OpenSQLite opens (creating if needed) the database and applies the schema.
-// A good DSN sets WAL + busy_timeout, e.g.:
-//
-//	file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)
-func OpenSQLite(dsn string) (*SQLite, error) {
-	db, err := sql.Open("sqlite", dsn)
+// OpenPostgres opens a connection to the database and applies the schema.
+// DSN format: postgres://user:pass@host:5432/dbname?sslmode=disable
+func OpenPostgres(dsn string) (*Postgres, error) {
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -39,34 +36,35 @@ func OpenSQLite(dsn string) (*SQLite, error) {
 	if _, err := db.Exec(schemaSQL); err != nil {
 		return nil, err
 	}
-	return &SQLite{db: db}, nil
+	return &Postgres{db: db}, nil
 }
 
-func (s *SQLite) Close() error { return s.db.Close() }
+func (s *Postgres) Close() error { return s.db.Close() }
 
 // --- users ---
 
-func (s *SQLite) CreateUser(ctx context.Context, email, hash, tz string) (*model.User, error) {
+func (s *Postgres) CreateUser(ctx context.Context, email, hash, tz string) (*model.User, error) {
 	now := time.Now().UTC()
-	res, err := s.db.ExecContext(ctx,
-		`INSERT INTO users(email, password_hash, timezone, created_at) VALUES(?,?,?,?)`,
-		email, hash, tz, now.Format(timeFmt))
+	var id int64
+	err := s.db.QueryRowContext(ctx,
+		`INSERT INTO users(email, password_hash, timezone, created_at)
+		 VALUES($1,$2,$3,$4) RETURNING id`,
+		email, hash, tz, now.Format(timeFmt)).Scan(&id)
 	if err != nil {
 		return nil, err
 	}
-	id, _ := res.LastInsertId()
 	return &model.User{ID: id, Email: email, PasswordHash: hash, Timezone: tz, CreatedAt: now}, nil
 }
 
-func (s *SQLite) UserByEmail(ctx context.Context, email string) (*model.User, error) {
+func (s *Postgres) UserByEmail(ctx context.Context, email string) (*model.User, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT id, email, password_hash, timezone FROM users WHERE email = ?`, email)
+		`SELECT id, email, password_hash, timezone FROM users WHERE email = $1`, email)
 	return scanUser(row)
 }
 
-func (s *SQLite) UserByID(ctx context.Context, id int64) (*model.User, error) {
+func (s *Postgres) UserByID(ctx context.Context, id int64) (*model.User, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT id, email, password_hash, timezone FROM users WHERE id = ?`, id)
+		`SELECT id, email, password_hash, timezone FROM users WHERE id = $1`, id)
 	return scanUser(row)
 }
 
@@ -83,16 +81,16 @@ func scanUser(row *sql.Row) (*model.User, error) {
 
 // --- sessions ---
 
-func (s *SQLite) CreateSession(ctx context.Context, sess model.Session) error {
+func (s *Postgres) CreateSession(ctx context.Context, sess model.Session) error {
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO sessions(id, user_id, expires_at) VALUES(?,?,?)`,
+		`INSERT INTO sessions(id, user_id, expires_at) VALUES($1,$2,$3)`,
 		sess.ID, sess.UserID, sess.ExpiresAt.UTC().Format(timeFmt))
 	return err
 }
 
-func (s *SQLite) SessionByID(ctx context.Context, id string) (*model.Session, error) {
+func (s *Postgres) SessionByID(ctx context.Context, id string) (*model.Session, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT id, user_id, expires_at FROM sessions WHERE id = ?`, id)
+		`SELECT id, user_id, expires_at FROM sessions WHERE id = $1`, id)
 	var sess model.Session
 	var exp string
 	if err := row.Scan(&sess.ID, &sess.UserID, &exp); err != nil {
@@ -105,34 +103,35 @@ func (s *SQLite) SessionByID(ctx context.Context, id string) (*model.Session, er
 	return &sess, nil
 }
 
-func (s *SQLite) DeleteSession(ctx context.Context, id string) error {
-	_, err := s.db.ExecContext(ctx, `DELETE FROM sessions WHERE id = ?`, id)
+func (s *Postgres) DeleteSession(ctx context.Context, id string) error {
+	_, err := s.db.ExecContext(ctx, `DELETE FROM sessions WHERE id = $1`, id)
 	return err
 }
 
-func (s *SQLite) DeleteExpiredSessions(ctx context.Context) error {
+func (s *Postgres) DeleteExpiredSessions(ctx context.Context) error {
 	_, err := s.db.ExecContext(ctx,
-		`DELETE FROM sessions WHERE expires_at < ?`,
+		`DELETE FROM sessions WHERE expires_at < $1`,
 		time.Now().UTC().Format(timeFmt))
 	return err
 }
 
 // --- mood entries ---
 
-func (s *SQLite) UpsertMood(ctx context.Context, userID int64, date string, level int) error {
+func (s *Postgres) UpsertMood(ctx context.Context, userID int64, date string, level int) error {
 	now := time.Now().UTC().Format(timeFmt)
 	_, err := s.db.ExecContext(ctx,
 		`INSERT INTO mood_entries(user_id, entry_date, mood_level, created_at, updated_at)
-		 VALUES(?,?,?,?,?)
+		 VALUES($1,$2,$3,$4,$5)
 		 ON CONFLICT(user_id, entry_date)
 		 DO UPDATE SET mood_level = excluded.mood_level, updated_at = excluded.updated_at`,
 		userID, date, level, now, now)
 	return err
 }
 
-func (s *SQLite) MoodByUserAndDate(ctx context.Context, userID int64, date string) (*model.MoodEntry, error) {
+func (s *Postgres) MoodByUserAndDate(ctx context.Context, userID int64, date string) (*model.MoodEntry, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT user_id, entry_date, mood_level FROM mood_entries WHERE user_id = ? AND entry_date = ?`,
+		`SELECT user_id, entry_date, mood_level FROM mood_entries
+		 WHERE user_id = $1 AND entry_date = $2`,
 		userID, date)
 	var m model.MoodEntry
 	if err := row.Scan(&m.UserID, &m.Date, &m.Level); err != nil {
@@ -144,9 +143,10 @@ func (s *SQLite) MoodByUserAndDate(ctx context.Context, userID int64, date strin
 	return &m, nil
 }
 
-func (s *SQLite) MoodsForUser(ctx context.Context, userID int64) ([]model.MoodEntry, error) {
+func (s *Postgres) MoodsForUser(ctx context.Context, userID int64) ([]model.MoodEntry, error) {
 	rows, err := s.db.QueryContext(ctx,
-		`SELECT user_id, entry_date, mood_level FROM mood_entries WHERE user_id = ? ORDER BY entry_date`,
+		`SELECT user_id, entry_date, mood_level FROM mood_entries
+		 WHERE user_id = $1 ORDER BY entry_date`,
 		userID)
 	if err != nil {
 		return nil, err
@@ -163,7 +163,7 @@ func (s *SQLite) MoodsForUser(ctx context.Context, userID int64) ([]model.MoodEn
 	return out, rows.Err()
 }
 
-func (s *SQLite) DailyAverages(ctx context.Context) ([]model.DayAverage, error) {
+func (s *Postgres) DailyAverages(ctx context.Context) ([]model.DayAverage, error) {
 	rows, err := s.db.QueryContext(ctx,
 		`SELECT entry_date, AVG(mood_level), COUNT(*)
 		 FROM mood_entries GROUP BY entry_date ORDER BY entry_date`)

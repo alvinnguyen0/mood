@@ -48,7 +48,7 @@ var timezones = []string{
 	"Australia/Sydney",
 }
 
-const dockerDSN = "file:/data/mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)"
+const dockerDSN = "postgres://mood:mood@postgres:5432/mood?sslmode=disable"
 
 func main() {
 	n := flag.Int("n", 100, "number of test accounts to create")
@@ -65,10 +65,10 @@ func main() {
 
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
-		dsn = "file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)"
+		dsn = "postgres://mood:mood@localhost:5432/mood?sslmode=disable"
 	}
 
-	st, err := store.OpenSQLite(dsn)
+	st, err := store.OpenPostgres(dsn)
 	if err != nil {
 		log.Fatalf("open db: %v", err)
 	}

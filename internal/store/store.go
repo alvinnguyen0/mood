@@ -30,5 +30,5 @@ type Store interface {
 	Close() error
 }
 
-// Compile-time check that the SQLite implementation satisfies Store.
-var _ Store = (*SQLite)(nil)
+// Compile-time check that the Postgres implementation satisfies Store.
+var _ Store = (*Postgres)(nil)
