@@ -94,6 +94,22 @@ func (s *Server) logger(next http.Handler) http.Handler {
 	})
 }
 
+// loadUser reads the session cookie and populates the user in context if valid.
+// Unlike requireAuth it does not redirect on missing/expired sessions.
+func (s *Server) loadUser(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if c, err := r.Cookie(sessionCookie); err == nil {
+			if sess, err := s.store.SessionByID(r.Context(), c.Value); err == nil && !sess.ExpiresAt.Before(time.Now()) {
+				if u, err := s.store.UserByID(r.Context(), sess.UserID); err == nil {
+					ctx := context.WithValue(r.Context(), userKey, u)
+					r = r.WithContext(ctx)
+				}
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
+}
+
 // requireAuth loads the session + user from the cookie, or redirects to /login.
 func (s *Server) requireAuth(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

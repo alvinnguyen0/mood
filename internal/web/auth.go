@@ -83,7 +83,7 @@ func (s *Server) signup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.startSession(w, r, u.ID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/you", http.StatusSeeOther)
 }
 
 func (s *Server) login(w http.ResponseWriter, r *http.Request) {
@@ -99,7 +99,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	s.startSession(w, r, u.ID)
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/you", http.StatusSeeOther)
 }
 
 func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
@@ -107,7 +107,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request) {
 		_ = s.store.DeleteSession(r.Context(), c.Value)
 	}
 	http.SetCookie(w, &http.Cookie{Name: sessionCookie, Value: "", Path: "/", MaxAge: -1})
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/everyone", http.StatusSeeOther)
 }
 
 func (s *Server) startSession(w http.ResponseWriter, r *http.Request, uid int64) {
