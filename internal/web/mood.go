@@ -101,7 +101,7 @@ func (s *Server) logMood(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.Header.Get("HX-Request") == "true" {
-		s.render(w, "you", "todaycard", todayCard{Today: today, TodayLevel: lvl, TodayNote: note, Faces: service.Faces(), CSRFToken: csrfFrom(r.Context())})
+		w.Header().Set("HX-Redirect", "/you")
 		return
 	}
 	http.Redirect(w, r, "/you", http.StatusSeeOther)
