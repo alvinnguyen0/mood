@@ -46,3 +46,27 @@
 
   window.addEventListener("scroll", hide, { passive: true });
 })();
+
+// Theme toggle — syncs with the inline script in <head> that sets data-theme
+// on load to avoid flash of wrong theme.
+(function () {
+  var btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+
+  function icon(theme) { return theme === "dark" ? "☀︎" : "☾"; }
+
+  function apply(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    btn.textContent = icon(theme);
+    btn.setAttribute("aria-label", theme === "dark" ? "switch to light mode" : "switch to dark mode");
+  }
+
+  var current = document.documentElement.getAttribute("data-theme") || "light";
+  apply(current);
+
+  btn.addEventListener("click", function () {
+    var next = document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark";
+    apply(next);
+    try { localStorage.setItem("theme", next); } catch (e) {}
+  });
+})();
