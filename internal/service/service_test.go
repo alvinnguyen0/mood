@@ -130,7 +130,7 @@ func TestBuildAvgGrid_KnownDate(t *testing.T) {
 		for _, c := range w {
 			if c.Date == "2025-03-10" {
 				found = true
-				wantColor := colorForAvg(3.7) // continuous HSL spectrum
+				wantColor := colorForLevel(3.7)
 				if c.Color != wantColor {
 					t.Fatalf("color: got %s, want %s", c.Color, wantColor)
 				}

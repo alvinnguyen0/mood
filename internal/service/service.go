@@ -231,7 +231,7 @@ func BuildAvgGrid(today string, avgs map[string]model.DayAverage) Grid {
 			c.Tip = ds + " \u00B7 no entries"
 			return c
 		}
-		c.Color = colorForAvg(a.Avg)
+		c.Color = colorForLevel(a.Avg)
 		c.Tip = fmt.Sprintf("%s \u00B7 avg %.1f \u00B7 %d %s", ds, a.Avg, a.Count, plural(a.Count, "person", "people"))
 		return c
 	})

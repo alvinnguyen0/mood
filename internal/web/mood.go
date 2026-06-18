@@ -120,7 +120,7 @@ func (s *Server) everyonePage(w http.ResponseWriter, r *http.Request) {
 	data := everyoneData{
 		Tab:        "everyone",
 		LoggedIn:   u != nil,
-		Legend:     service.SpectrumLegend(9),
+		Legend:     service.Palette(),
 		Grid:       service.BuildAvgGrid(today, avgs),
 		EntryCount: len(rows),
 		CSRFToken:  csrfFrom(r.Context()),
