@@ -13,12 +13,10 @@
 <body>
 <header class="nav">
   <div class="brand">mood</div>
-  {{if .Tab}}
   <nav class="tabs">
     <a href="/everyone" class="{{if eq .Tab "everyone"}}active{{end}}">everyone</a>
     <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">you</a>
   </nav>
-  {{end}}
   <div class="nav-right">
     {{if .LoggedIn}}
     <form method="post" action="/logout" class="logout"><input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><button type="submit">log out</button></form>
