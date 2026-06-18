@@ -157,6 +157,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   background: var(--empty);
 }
 .cell.future { background: transparent; }
+.month-gap { margin-left: 5px; }
 .cell[data-tip] { cursor: pointer; }
 
 /* --- legend --- */

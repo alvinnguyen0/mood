@@ -1,12 +1,12 @@
 {{define "moodgrid"}}
 <div class="gridwrap">
-  <div class="months">{{range .MonthRow}}<span class="mlabel">{{.}}</span>{{end}}</div>
+  <div class="months">{{range $i, $m := .MonthRow}}<span class="mlabel{{if and (gt $i 0) $m}} month-gap{{end}}">{{$m}}</span>{{end}}</div>
   <div class="gridbody">
     <div class="wdays">
       <span></span><span>mon</span><span></span><span>wed</span><span></span><span>fri</span><span></span>
     </div>
     <div class="grid">
-      {{range .Weeks}}<div class="week">{{range .}}{{if .Future}}<div class="cell future"></div>{{else}}<div class="cell" style="background-color:{{.Color}}" data-tip="{{.Tip}}"></div>{{end}}{{end}}</div>{{end}}
+      {{range $i, $w := .Weeks}}<div class="week{{if and (gt $i 0) (index $.MonthRow $i)}} month-gap{{end}}">{{range $w}}{{if .Future}}<div class="cell future"></div>{{else}}<div class="cell" style="background-color:{{.Color}}" data-tip="{{.Tip}}"></div>{{end}}{{end}}</div>{{end}}
     </div>
   </div>
 </div>
