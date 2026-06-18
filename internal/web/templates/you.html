@@ -9,8 +9,38 @@
   <div class="streaks">
     <div class="streak"><span class="num">{{.Current}}</span><span class="lbl">current streak</span></div>
     <div class="streak"><span class="num">{{.Longest}}</span><span class="lbl">longest streak</span></div>
+    {{if .Trends.HasWeek}}
+    <div class="streak"><span class="num">{{printf "%.1f" .Trends.WeekAvg}}</span><span class="lbl">this week{{if .Trends.HasPrevWeek}} · {{if gt .Trends.WeekDelta 0.0}}+{{end}}{{printf "%.1f" .Trends.WeekDelta}}{{end}}</span></div>
+    {{end}}
+    {{if gt .EntryCount 0}}
+    <div class="streak"><span class="num">{{face .Trends.TopMood}}</span><span class="lbl">most common · {{.Trends.TopMoodPct}}%</span></div>
+    {{end}}
   </div>
 </section>
+
+{{if .Trends.HasDOW}}
+<section class="insights">
+  <h2>your week</h2>
+  <div class="dow-chart">
+    {{range $i, $n := .Trends.DayOfWeekN}}
+    {{if gt $n 0}}
+    <div class="dow-bar">
+      <div class="dow-fill" style="height:{{index $.Trends.DayOfWeekPct $i}}%"></div>
+      <span class="dow-label">{{index $.Trends.DayOfWeek $i | printf "%.1f"}}</span>
+      <span class="dow-name">{{dow $i}}</span>
+    </div>
+    {{else}}
+    <div class="dow-bar">
+      <div class="dow-fill" style="height:0%"></div>
+      <span class="dow-label">—</span>
+      <span class="dow-name">{{dow $i}}</span>
+    </div>
+    {{end}}
+    {{end}}
+  </div>
+  <p class="dow-summary">best day is <strong>{{.Trends.BestDay}}</strong> · worst is <strong>{{.Trends.WorstDay}}</strong></p>
+</section>
+{{end}}
 
 <section class="gridsection">
   {{if eq .EntryCount 0}}

@@ -18,6 +18,7 @@ type MoodEntry struct {
 	UserID int64
 	Date   string
 	Level  int // 1..5
+	Note   string
 }
 
 // Session is a server-side login session; the opaque ID lives in a cookie.

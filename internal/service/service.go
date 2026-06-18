@@ -111,6 +111,110 @@ func localNow(tz string) time.Time {
 // TodayStr returns the user-local calendar date "YYYY-MM-DD".
 func TodayStr(tz string) string { return localNow(tz).Format(dateFmt) }
 
+// --- trends ---
+
+// Trends holds computed insights for the You page.
+type Trends struct {
+	WeekAvg     float64
+	PrevWeekAvg float64
+	WeekDelta   float64
+	HasWeek     bool
+	HasPrevWeek bool
+	TopMood     int
+	TopMoodPct  int
+	DayOfWeek   [7]float64
+	DayOfWeekN  [7]int
+	DayOfWeekPct [7]int
+	BestDay     string
+	WorstDay    string
+	HasDOW      bool
+}
+
+var dowNames = [7]string{"sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"}
+
+func ComputeTrends(today string, moods []model.MoodEntry) Trends {
+	var t Trends
+	if len(moods) == 0 {
+		return t
+	}
+
+	td := parseDate(today)
+	weekStart := td.AddDate(0, 0, -int(td.Weekday()))
+	prevWeekStart := weekStart.AddDate(0, 0, -7)
+
+	var weekSum, prevSum float64
+	var weekN, prevN int
+	counts := [5]int{}
+	var dowSum [7]float64
+	var dowN [7]int
+
+	for _, m := range moods {
+		d := parseDate(m.Date)
+		counts[m.Level-1]++
+
+		wd := int(d.Weekday())
+		dowSum[wd] += float64(m.Level)
+		dowN[wd]++
+
+		if !d.Before(weekStart) && !d.After(td) {
+			weekSum += float64(m.Level)
+			weekN++
+		} else if !d.Before(prevWeekStart) && d.Before(weekStart) {
+			prevSum += float64(m.Level)
+			prevN++
+		}
+	}
+
+	if weekN > 0 {
+		t.HasWeek = true
+		t.WeekAvg = weekSum / float64(weekN)
+	}
+	if prevN > 0 {
+		t.HasPrevWeek = true
+		t.PrevWeekAvg = prevSum / float64(prevN)
+	}
+	if t.HasWeek && t.HasPrevWeek {
+		t.WeekDelta = t.WeekAvg - t.PrevWeekAvg
+	}
+
+	maxIdx := 0
+	for i, c := range counts {
+		if c > counts[maxIdx] {
+			maxIdx = i
+		}
+	}
+	t.TopMood = maxIdx + 1
+	t.TopMoodPct = counts[maxIdx] * 100 / len(moods)
+
+	bestIdx, worstIdx := -1, -1
+	var bestAvg, worstAvg float64
+	for i := range dowN {
+		if dowN[i] == 0 {
+			continue
+		}
+		t.DayOfWeek[i] = dowSum[i] / float64(dowN[i])
+		t.DayOfWeekN[i] = dowN[i]
+		if bestIdx == -1 || t.DayOfWeek[i] > bestAvg {
+			bestAvg = t.DayOfWeek[i]
+			bestIdx = i
+		}
+		if worstIdx == -1 || t.DayOfWeek[i] < worstAvg {
+			worstAvg = t.DayOfWeek[i]
+			worstIdx = i
+		}
+	}
+	if bestIdx >= 0 {
+		t.HasDOW = true
+		t.BestDay = dowNames[bestIdx]
+		t.WorstDay = dowNames[worstIdx]
+		for i := range t.DayOfWeek {
+			t.DayOfWeekPct[i] = int(t.DayOfWeek[i] * 20)
+		}
+	}
+
+	return t
+}
+
 // --- grid ---
 
 // Cell is one day in the activity grid.
@@ -181,22 +285,24 @@ func monthRow(weeks [][7]Cell) []string {
 // BuildUserGrid builds the personal grid, spanning from 2 weeks before the
 // earliest logged entry to today (max 52 weeks). Returns an empty Grid when
 // there are no entries so the caller can skip rendering entirely.
-func BuildUserGrid(today string, levels map[string]int) Grid {
-	if len(levels) == 0 {
+type UserEntry struct {
+	Level int
+	Note  string
+}
+
+func BuildUserGrid(today string, entries map[string]UserEntry) Grid {
+	if len(entries) == 0 {
 		return Grid{}
 	}
 
-	// Find the earliest logged date.
 	earliest := today
-	for d := range levels {
+	for d := range entries {
 		if d < earliest {
 			earliest = d
 		}
 	}
 
-	// Pad two weeks before the first entry so it doesn't start at the edge.
 	start := parseDate(earliest).AddDate(0, 0, -14)
-	// Never go further back than 52 weeks.
 	if cap52 := parseDate(today).AddDate(0, 0, -7*52); start.Before(cap52) {
 		start = cap52
 	}
@@ -206,12 +312,16 @@ func BuildUserGrid(today string, levels map[string]int) Grid {
 		if future {
 			return c
 		}
-		lv := levels[ds]
-		c.Color = colorForLevel(float64(lv))
-		if lv > 0 {
-			c.Tip = fmt.Sprintf("%s \u00B7 %s %s", ds, faceEmoji[lv-1], faceLabel[lv-1])
-		} else {
+		e, ok := entries[ds]
+		if !ok {
+			c.Color = emptyColor
 			c.Tip = ds + " \u00B7 no entry"
+			return c
+		}
+		c.Color = colorForLevel(float64(e.Level))
+		c.Tip = fmt.Sprintf("%s \u00B7 %s %s", ds, faceEmoji[e.Level-1], faceLabel[e.Level-1])
+		if e.Note != "" {
+			c.Tip += " \u00B7 " + e.Note
 		}
 		return c
 	}

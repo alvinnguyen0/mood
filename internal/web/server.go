@@ -37,8 +37,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // parseTemplates builds one template set per page (layout + page + partials),
 // so each page's {{define "content"}} stays isolated.
 func (s *Server) parseTemplates() error {
+	dowShort := [7]string{"S", "M", "T", "W", "T", "F", "S"}
 	funcs := template.FuncMap{
 		"face": service.Face,
+		"add":  func(a, b int) int { return a + b },
+		"dow":  func(i int) string { return dowShort[i] },
 	}
 	partials := []string{
 		"templates/partials/todaycard.html",

@@ -3,14 +3,18 @@
   <form class="picker" method="post" action="/mood"
         hx-post="/mood" hx-target="#todaycard" hx-swap="outerHTML">
     <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
-    {{range .Faces}}
-    <button type="submit" name="level" value="{{.Level}}"
-            class="face{{if eq .Level $.TodayLevel}} selected{{end}}"
-            title="{{.Label}}" aria-label="{{.Label}}">{{.Emoji}}</button>
-    {{end}}
+    <div class="faces">
+      {{range .Faces}}
+      <button type="submit" name="level" value="{{.Level}}"
+              class="face{{if eq .Level $.TodayLevel}} selected{{end}}"
+              title="{{.Label}}" aria-label="{{.Label}}">{{.Emoji}}</button>
+      {{end}}
+    </div>
+    <input type="text" name="note" class="note-input" value="{{.TodayNote}}"
+           placeholder="one word about today (optional)" maxlength="50" autocomplete="off">
   </form>
   {{if .TodayLevel}}
-    <p class="loggednote">logged for {{.Today}}: {{face .TodayLevel}} — tap another face to change it.</p>
+    <p class="loggednote">logged for {{.Today}}: {{face .TodayLevel}}{{if .TodayNote}} · {{.TodayNote}}{{end}} — tap another face to change it.</p>
   {{else}}
     <p class="loggednote">pick a face to log {{.Today}}.</p>
   {{end}}

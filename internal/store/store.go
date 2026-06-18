@@ -22,7 +22,8 @@ type Store interface {
 	DeleteExpiredSessions(ctx context.Context) error
 
 	// Mood entries
-	UpsertMood(ctx context.Context, userID int64, date string, level int) error
+	UpsertMood(ctx context.Context, userID int64, date string, level int, note string) error
+	TodayCount(ctx context.Context, date string) (int, error)
 	MoodByUserAndDate(ctx context.Context, userID int64, date string) (*model.MoodEntry, error)
 	MoodsForUser(ctx context.Context, userID int64) ([]model.MoodEntry, error)
 	DailyAverages(ctx context.Context) ([]model.DayAverage, error)

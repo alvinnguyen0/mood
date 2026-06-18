@@ -74,15 +74,15 @@ func TestStreaks_Duplicates(t *testing.T) {
 // --- BuildUserGrid tests ---
 
 func TestBuildUserGrid_EmptyLevels(t *testing.T) {
-	g := BuildUserGrid(testToday, map[string]int{})
+	g := BuildUserGrid(testToday, map[string]UserEntry{})
 	if len(g.Weeks) != 0 {
 		t.Fatalf("expected empty grid for no entries, got %d weeks", len(g.Weeks))
 	}
 }
 
 func TestBuildUserGrid_KnownDate(t *testing.T) {
-	levels := map[string]int{"2025-03-10": 3}
-	g := BuildUserGrid(testToday, levels)
+	entries := map[string]UserEntry{"2025-03-10": {Level: 3}}
+	g := BuildUserGrid(testToday, entries)
 	var found bool
 	for _, w := range g.Weeks {
 		for _, c := range w {

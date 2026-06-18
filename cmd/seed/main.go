@@ -124,7 +124,7 @@ func main() {
 			val := userBaseline + dayBias(d) + (rng.Float64()*2.0 - 1.0)
 			level := clampLevel(int(val + 0.5))
 
-			if err := st.UpsertMood(ctx, u.ID, date, level); err != nil {
+			if err := st.UpsertMood(ctx, u.ID, date, level, ""); err != nil {
 				log.Fatalf("upsert mood for %s on %s: %v", email, date, err)
 			}
 			totalEntries++
