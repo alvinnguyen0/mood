@@ -2,6 +2,7 @@ package service
 
 import (
 	"fmt"
+	"html/template"
 	"math"
 	"sort"
 	"time"
@@ -13,12 +14,13 @@ const dateFmt = "2006-01-02"
 
 // Palette colors for mood levels 1..5 (cool/low -> warm/high). Empty days use
 // emptyColor. Colors are presentation only; mood_level is the source of truth.
-var palette = [5]string{"var(--mood-1)", "var(--mood-2)", "var(--mood-3)", "var(--mood-4)", "var(--mood-5)"}
+// template.CSS bypasses html/template's CSS value filter (which rejects var()).
+var palette = [5]template.CSS{"var(--mood-1)", "var(--mood-2)", "var(--mood-3)", "var(--mood-4)", "var(--mood-5)"}
 
-const emptyColor = "var(--empty)"
+const emptyColor template.CSS = "var(--empty)"
 
 var faceEmoji = [5]string{"\U0001F641", "\U0001F615", "\U0001F610", "\U0001F642", "\U0001F604"}
-var faceLabel = [5]string{"Frown", "Meh", "Neutral", "Slight smile", "Big smile"}
+var faceLabel = [5]string{"frown", "meh", "neutral", "slight smile", "big smile"}
 
 // FaceInfo describes one mood level for the picker and legend.
 type FaceInfo struct {
@@ -45,11 +47,11 @@ func Face(level int) string {
 }
 
 // Palette exposes the five band colors (low -> high) for the legend.
-func Palette() []string { return palette[:] }
+func Palette() []template.CSS { return palette[:] }
 
 // colorForLevel maps a value in [1,5] to a band color by rounding to the
 // nearest level. The Everyone view shows the precise average in the tooltip.
-func colorForLevel(v float64) string {
+func colorForLevel(v float64) template.CSS {
 	if v <= 0 {
 		return emptyColor
 	}
@@ -85,10 +87,10 @@ func TodayStr(tz string) string { return localNow(tz).Format(dateFmt) }
 
 // Cell is one day in the activity grid.
 type Cell struct {
-	Date   string // "YYYY-MM-DD"
-	Color  string // CSS color
-	Tip    string // hover/tap text
-	Future bool   // dates after today: rendered blank
+	Date   string       // "YYYY-MM-DD"
+	Color  template.CSS // CSS color (template.CSS bypasses html/template's CSS filter)
+	Tip    string       // hover/tap text
+	Future bool         // dates after today: rendered blank
 }
 
 // Grid is the GitHub-style activity grid: a slice of week-columns (each 7 days,
