@@ -15,6 +15,8 @@
   --mood-3:         #6b8fe5;
   --mood-4:         #3f68d0;
   --mood-5:         #1e46a8;  /* deep navy */
+  --brand-log:      #209fb5;  /* Sapphire */
+  --brand-mood:     #8839ef;  /* Mauve */
   --cell:           12px;
   --cell-gap:       3px;
   --wdays-w:        28px;
@@ -30,6 +32,8 @@
   --accent:         #cba6f7;  /* Mauve */
   --accent-shadow:  rgba(203, 166, 247, .20);
   --empty:          #181825;  /* Mantle */
+  --brand-log:      #74c7ec;  /* Sapphire */
+  --brand-mood:     #cba6f7;  /* Mauve */
   --err-bg:         #4a1524;
   --err-fg:         #f38ba8;  /* Red */
   --mood-1:         #3b4a7a;  /* muted dark blue */
@@ -72,6 +76,8 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   margin: 0 auto;
 }
 .brand { font-weight: 700; letter-spacing: -0.02em; }
+.brand-log { color: var(--brand-log); }
+.brand-mood { color: var(--brand-mood); }
 .tabs { display: flex; gap: 16px; }
 .tabs a {
   text-decoration: none;

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{block "title" .}}Mood{{end}} · mood</title>
+<title>{{block "title" .}}mood{{end}} · logmood</title>
 <link rel="stylesheet" href="/static/style.css">
 <script>
   (function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();
@@ -12,7 +12,7 @@
 </head>
 <body>
 <header class="nav">
-  <div class="brand">mood</div>
+  <div class="brand"><span class="brand-log">log</span><span class="brand-mood">mood</span></div>
   <nav class="tabs">
     <a href="/everyone" class="{{if eq .Tab "everyone"}}active{{end}}">everyone</a>
     <a href="/you" class="{{if eq .Tab "you"}}active{{end}}">you</a>
