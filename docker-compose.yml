@@ -1,6 +1,6 @@
 services:
   app:
-    build: .
+    image: ghcr.io/alvinnguyen0/mood:latest
     restart: unless-stopped
     volumes:
       - dbdata:/data
