@@ -40,6 +40,10 @@ type everyoneData struct {
 
 func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 	u := userFrom(r.Context())
+	if u == nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 	today := service.TodayStr(u.Timezone)
 
 	moods, err := s.store.MoodsForUser(r.Context(), u.ID)
@@ -71,6 +75,10 @@ func (s *Server) youPage(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) logMood(w http.ResponseWriter, r *http.Request) {
 	u := userFrom(r.Context())
+	if u == nil {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
+	}
 
 	lvl, err := strconv.Atoi(r.FormValue("level"))
 	if err != nil || lvl < 1 || lvl > 5 {
