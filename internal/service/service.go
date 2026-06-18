@@ -302,7 +302,8 @@ func BuildUserGrid(today string, entries map[string]UserEntry) Grid {
 		}
 	}
 
-	start := parseDate(earliest).AddDate(0, 0, -14)
+	e := parseDate(earliest)
+	start := time.Date(e.Year(), e.Month(), 1, 0, 0, 0, 0, time.UTC)
 	if cap52 := parseDate(today).AddDate(0, 0, -7*52); start.Before(cap52) {
 		start = cap52
 	}
@@ -330,7 +331,22 @@ func BuildUserGrid(today string, entries map[string]UserEntry) Grid {
 
 // BuildAvgGrid builds the Everyone grid from a date->average map.
 func BuildAvgGrid(today string, avgs map[string]model.DayAverage) Grid {
-	return assemble(today, func(ds string, future bool) Cell {
+	if len(avgs) == 0 {
+		return Grid{}
+	}
+	earliest := today
+	for d := range avgs {
+		if d < earliest {
+			earliest = d
+		}
+	}
+	e := parseDate(earliest)
+	start := time.Date(e.Year(), e.Month(), 1, 0, 0, 0, 0, time.UTC)
+	if cap52 := parseDate(today).AddDate(0, 0, -7*52); start.Before(cap52) {
+		start = cap52
+	}
+
+	return assembleRange(start.Format(dateFmt), today, func(ds string, future bool) Cell {
 		c := Cell{Date: ds, Future: future}
 		if future {
 			return c
