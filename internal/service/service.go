@@ -128,16 +128,15 @@ type Grid struct {
 	MonthRow []string
 }
 
-// assemble walks a whole number of weeks (Sunday..Saturday) ending in the week
-// of `today`, going back ~52 weeks, and fills each day with `fill`.
-func assemble(today string, fill func(ds string, future bool) Cell) Grid {
+// assembleRange walks whole weeks (Sunday..Saturday) from gridStart to the
+// Saturday on or after today, filling each day with fill.
+func assembleRange(gridStart, today string, fill func(ds string, future bool) Cell) Grid {
 	end := parseDate(today)
-
 	gridEnd := end
 	for gridEnd.Weekday() != time.Saturday {
 		gridEnd = gridEnd.AddDate(0, 0, 1)
 	}
-	start := end.AddDate(0, 0, -7*52)
+	start := parseDate(gridStart)
 	for start.Weekday() != time.Sunday {
 		start = start.AddDate(0, 0, -1)
 	}
@@ -154,6 +153,12 @@ func assemble(today string, fill func(ds string, future bool) Cell) Grid {
 		}
 	}
 	return Grid{Weeks: weeks, MonthRow: monthRow(weeks)}
+}
+
+// assemble is assembleRange fixed at 52 weeks back from today.
+func assemble(today string, fill func(ds string, future bool) Cell) Grid {
+	start := parseDate(today).AddDate(0, 0, -7*52).Format(dateFmt)
+	return assembleRange(start, today, fill)
 }
 
 func monthRow(weeks [][7]Cell) []string {
@@ -173,9 +178,30 @@ func monthRow(weeks [][7]Cell) []string {
 	return out
 }
 
-// BuildGrid builds the personal grid from a date->level map.
-func BuildGrid(today string, levels map[string]int) Grid {
-	return assemble(today, func(ds string, future bool) Cell {
+// BuildUserGrid builds the personal grid, spanning from 2 weeks before the
+// earliest logged entry to today (max 52 weeks). Returns an empty Grid when
+// there are no entries so the caller can skip rendering entirely.
+func BuildUserGrid(today string, levels map[string]int) Grid {
+	if len(levels) == 0 {
+		return Grid{}
+	}
+
+	// Find the earliest logged date.
+	earliest := today
+	for d := range levels {
+		if d < earliest {
+			earliest = d
+		}
+	}
+
+	// Pad two weeks before the first entry so it doesn't start at the edge.
+	start := parseDate(earliest).AddDate(0, 0, -14)
+	// Never go further back than 52 weeks.
+	if cap52 := parseDate(today).AddDate(0, 0, -7*52); start.Before(cap52) {
+		start = cap52
+	}
+
+	fill := func(ds string, future bool) Cell {
 		c := Cell{Date: ds, Future: future}
 		if future {
 			return c
@@ -188,7 +214,8 @@ func BuildGrid(today string, levels map[string]int) Grid {
 			c.Tip = ds + " \u00B7 no entry"
 		}
 		return c
-	})
+	}
+	return assembleRange(start.Format(dateFmt), today, fill)
 }
 
 // BuildAvgGrid builds the Everyone grid from a date->average map.
