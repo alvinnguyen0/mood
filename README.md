@@ -10,14 +10,13 @@ Server-rendered Go (no SPA, no build step). Stack per the plan: **chi** router,
 hashing, `html/template` + **htmx** for the one bit of interactivity (logging a
 mood swaps just the picker card; it also works without JS via a normal form post).
 
-## Run
+## Development
 
 Requires Go 1.22+ and network access the first time (to fetch dependencies).
 
 ```bash
-cd mood-tracker
 go mod tidy      # resolves chi, x/crypto, modernc.org/sqlite
-go run .
+make run         # start the server on :8080
 ```
 
 Then open http://localhost:8080 — sign up, and start logging.
@@ -26,6 +25,21 @@ Config via env vars:
 
 - `ADDR` — listen address (default `:8080`)
 - `DB_DSN` — SQLite DSN (default `file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)`)
+
+### Make targets
+
+| target | description |
+|---|---|
+| `make run` | run the server locally |
+| `make build` | compile binary to `./mood-tracker` |
+| `make test` | run the test suite |
+| `make seed` | seed local db with 100 test accounts |
+| `make seed-docker` | seed the running docker compose db |
+| `make up` | start docker compose in the background |
+| `make down` | stop docker compose |
+| `make logs` | tail app container logs |
+| `make clean` | remove compiled binary |
+| `make deploy HOST=<ip>` | force-pull main on the droplet and restart |
 
 ## Seed test data
 
