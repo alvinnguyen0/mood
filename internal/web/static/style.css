@@ -115,6 +115,7 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   font-size: 30px;
   line-height: 1;
   width: 56px; height: 56px;
+  display: flex; align-items: center; justify-content: center;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--bg);
