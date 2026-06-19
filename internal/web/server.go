@@ -16,13 +16,14 @@ var assets embed.FS
 // Server holds shared dependencies and the routed handler. Handlers are
 // methods on *Server so they share the store and parsed templates.
 type Server struct {
-	store  store.Store
-	pages  map[string]*template.Template
-	router http.Handler
+	store   store.Store
+	version string
+	pages   map[string]*template.Template
+	router  http.Handler
 }
 
-func New(st store.Store) (*Server, error) {
-	s := &Server{store: st}
+func New(st store.Store, version string) (*Server, error) {
+	s := &Server{store: st, version: version}
 	if err := s.parseTemplates(); err != nil {
 		return nil, err
 	}
@@ -39,9 +40,10 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (s *Server) parseTemplates() error {
 	dowShort := [7]string{"S", "M", "T", "W", "T", "F", "S"}
 	funcs := template.FuncMap{
-		"face": service.Face,
-		"add":  func(a, b int) int { return a + b },
-		"dow":  func(i int) string { return dowShort[i] },
+		"face":    service.Face,
+		"add":     func(a, b int) int { return a + b },
+		"dow":     func(i int) string { return dowShort[i] },
+		"version": func() string { return s.version },
 	}
 	partials := []string{
 		"templates/partials/todaycard.html",

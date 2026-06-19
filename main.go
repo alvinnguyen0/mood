@@ -14,6 +14,8 @@ import (
 	_ "time/tzdata" // embed timezone database for scratch-based Docker image
 )
 
+var version = "dev"
+
 func main() {
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
@@ -25,7 +27,7 @@ func main() {
 	}
 	defer st.Close()
 
-	srv, err := web.New(st)
+	srv, err := web.New(st, version)
 	if err != nil {
 		log.Fatalf("init server: %v", err)
 	}

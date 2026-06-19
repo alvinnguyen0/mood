@@ -1,12 +1,13 @@
 .PHONY: run build test seed seed-docker up down logs clean deploy
 
 HOST ?= $(DROPLET_HOST)
+VERSION ?= $(shell git describe --tags --always --dirty 2>/dev/null || echo dev)
 
 run:
-	go run .
+	go run -ldflags="-X main.version=$(VERSION)" .
 
 build:
-	CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o mood-tracker .
+	CGO_ENABLED=0 go build -trimpath -ldflags="-s -w -X main.version=$(VERSION)" -o mood-tracker .
 
 test:
 	go test ./...
