@@ -3,8 +3,14 @@ package store
 import (
 	"context"
 	"database/sql"
+	"embed"
 	_ "embed"
 	"errors"
+	"fmt"
+	"log"
+	"sort"
+	"strconv"
+	"strings"
 	"time"
 
 	"mood-tracker/internal/model"
@@ -18,12 +24,15 @@ var ErrNotFound = errors.New("not found")
 //go:embed schema.sql
 var schemaSQL string
 
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
+
 // timeFmt is how timestamps are stored as TEXT.
 const timeFmt = time.RFC3339
 
 type Postgres struct{ db *sql.DB }
 
-// OpenPostgres opens a connection to the database and applies the schema.
+// OpenPostgres opens a connection to the database and applies migrations.
 // DSN format: postgres://user:pass@host:5432/dbname?sslmode=disable
 func OpenPostgres(dsn string) (*Postgres, error) {
 	db, err := sql.Open("postgres", dsn)
@@ -36,7 +45,59 @@ func OpenPostgres(dsn string) (*Postgres, error) {
 	if _, err := db.Exec(schemaSQL); err != nil {
 		return nil, err
 	}
-	return &Postgres{db: db}, nil
+	p := &Postgres{db: db}
+	if err := p.migrate(); err != nil {
+		return nil, fmt.Errorf("migrate: %w", err)
+	}
+	return p, nil
+}
+
+func (s *Postgres) migrate() error {
+	entries, err := migrationsFS.ReadDir("migrations")
+	if err != nil {
+		return err
+	}
+	type migration struct {
+		version int
+		name    string
+	}
+	var migs []migration
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".sql") {
+			continue
+		}
+		parts := strings.SplitN(e.Name(), "_", 2)
+		v, err := strconv.Atoi(parts[0])
+		if err != nil {
+			continue
+		}
+		migs = append(migs, migration{version: v, name: e.Name()})
+	}
+	sort.Slice(migs, func(i, j int) bool { return migs[i].version < migs[j].version })
+
+	for _, m := range migs {
+		var exists bool
+		err := s.db.QueryRow(`SELECT EXISTS(SELECT 1 FROM schema_migrations WHERE version = $1)`, m.version).Scan(&exists)
+		if err != nil {
+			return err
+		}
+		if exists {
+			continue
+		}
+		data, err := migrationsFS.ReadFile("migrations/" + m.name)
+		if err != nil {
+			return err
+		}
+		if _, err := s.db.Exec(string(data)); err != nil {
+			return fmt.Errorf("%s: %w", m.name, err)
+		}
+		if _, err := s.db.Exec(`INSERT INTO schema_migrations(version, applied_at) VALUES($1, $2)`,
+			m.version, time.Now().UTC().Format(timeFmt)); err != nil {
+			return err
+		}
+		log.Printf("applied migration %s", m.name)
+	}
+	return nil
 }
 
 func (s *Postgres) Close() error { return s.db.Close() }
@@ -58,25 +119,41 @@ func (s *Postgres) CreateUser(ctx context.Context, email, hash, tz string) (*mod
 
 func (s *Postgres) UserByEmail(ctx context.Context, email string) (*model.User, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT id, email, password_hash, timezone FROM users WHERE email = $1`, email)
+		`SELECT id, email, password_hash, timezone, COALESCE(username, '') FROM users WHERE email = $1`, email)
 	return scanUser(row)
 }
 
 func (s *Postgres) UserByID(ctx context.Context, id int64) (*model.User, error) {
 	row := s.db.QueryRowContext(ctx,
-		`SELECT id, email, password_hash, timezone FROM users WHERE id = $1`, id)
+		`SELECT id, email, password_hash, timezone, COALESCE(username, '') FROM users WHERE id = $1`, id)
 	return scanUser(row)
 }
 
 func scanUser(row *sql.Row) (*model.User, error) {
 	var u model.User
-	if err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.Timezone); err != nil {
+	if err := row.Scan(&u.ID, &u.Email, &u.PasswordHash, &u.Timezone, &u.Username); err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
 	return &u, nil
+}
+
+func (s *Postgres) UpdateUsername(ctx context.Context, userID int64, username string) error {
+	var uname *string
+	if username != "" {
+		uname = &username
+	}
+	_, err := s.db.ExecContext(ctx,
+		`UPDATE users SET username = $1 WHERE id = $2`, uname, userID)
+	return err
+}
+
+func (s *Postgres) UpdatePassword(ctx context.Context, userID int64, hash string) error {
+	_, err := s.db.ExecContext(ctx,
+		`UPDATE users SET password_hash = $1 WHERE id = $2`, hash, userID)
+	return err
 }
 
 // --- sessions ---

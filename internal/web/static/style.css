@@ -86,6 +86,10 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 }
 .tabs a.active { color: var(--fg); border-bottom-color: var(--accent); }
 .nav-right { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+.account-link {
+  text-decoration: none; color: var(--muted); font-weight: 500;
+}
+.account-link:hover, .account-link.active { color: var(--fg); }
 .logout button {
   background: none; border: none; color: var(--muted);
   cursor: pointer; font: inherit; padding: 0;
@@ -255,6 +259,14 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
   background: var(--err-bg); color: var(--err-fg);
   padding: 10px 12px; border-radius: 10px; font-size: .9rem;
 }
+.success {
+  background: #e8f5e9; color: #2e7d32;
+  padding: 10px 12px; border-radius: 10px; font-size: .9rem;
+}
+[data-theme="dark"] .success {
+  background: #1b3a1f; color: #81c784;
+}
+.pw-heading { margin-top: 28px; }
 
 /* --- empty state --- */
 .empty-state { color: var(--muted); font-size: .95rem; margin: 18px 0; }

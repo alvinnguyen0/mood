@@ -14,6 +14,8 @@ type Store interface {
 	CreateUser(ctx context.Context, email, passwordHash, timezone string) (*model.User, error)
 	UserByEmail(ctx context.Context, email string) (*model.User, error)
 	UserByID(ctx context.Context, id int64) (*model.User, error)
+	UpdateUsername(ctx context.Context, userID int64, username string) error
+	UpdatePassword(ctx context.Context, userID int64, passwordHash string) error
 
 	// Sessions
 	CreateSession(ctx context.Context, s model.Session) error

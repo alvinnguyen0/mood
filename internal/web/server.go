@@ -48,7 +48,7 @@ func (s *Server) parseTemplates() error {
 		"templates/partials/grid.html",
 		"templates/partials/legend.html",
 	}
-	pages := []string{"you", "everyone", "login", "signup"}
+	pages := []string{"you", "everyone", "login", "signup", "account"}
 	s.pages = map[string]*template.Template{}
 	for _, p := range pages {
 		files := append([]string{"templates/layout.html", "templates/" + p + ".html"}, partials...)
