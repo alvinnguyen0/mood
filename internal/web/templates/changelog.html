@@ -1,0 +1,16 @@
+{{define "title"}}what's new{{end}}
+{{define "content"}}
+<h1>what's new</h1>
+<p class="sub">recent updates to logmood</p>
+
+{{range .Entries}}
+<section class="changelog-release">
+  <h2 class="changelog-version">{{.Version}} <span class="changelog-date">· {{.Date}}</span></h2>
+  <ul class="changelog-list">
+    {{range .Changes}}
+    <li>{{.}}</li>
+    {{end}}
+  </ul>
+</section>
+{{end}}
+{{end}}
