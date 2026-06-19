@@ -1,30 +1,32 @@
-# mood
+# logmood
 
-A minimalist mood tracker. Log one mood a day (five faces, 🙁 → 😄), see your
-year as a GitHub-style activity grid with current/longest streaks, and view an
-**Everyone** tab showing the daily average across all users. Individual entries
-stay private; the community view only ever exposes aggregates.
+A minimalist mood tracker at [logmood.com](https://logmood.com). Log one mood a
+day (five faces, 🙁 → 😄), add an optional note, see your year as a
+GitHub-style activity grid with streaks and weekly insights, and view an
+**everyone** tab showing the daily average across all users. Individual entries
+stay private; the community view only exposes aggregates.
 
-Server-rendered Go (no SPA, no build step). Stack per the plan: **chi** router,
-**SQLite** via the pure-Go `modernc.org/sqlite` driver, **bcrypt** password
-hashing, `html/template` + **htmx** for the one bit of interactivity (logging a
-mood swaps just the picker card; it also works without JS via a normal form post).
+Server-rendered Go (no SPA, no build step). Stack: **chi** router, **PostgreSQL**
+database, **bcrypt** password hashing, `html/template` + **htmx** for
+interactivity. Light/dark theme using Catppuccin (Latte/Mocha).
 
 ## Development
 
-Requires Go 1.22+ and network access the first time (to fetch dependencies).
+Requires Go 1.22+ and a PostgreSQL instance.
 
 ```bash
-go mod tidy      # resolves chi, x/crypto, modernc.org/sqlite
-make run         # start the server on :8080
+go mod tidy
+DB_DSN="postgres://mood:mood@localhost:5432/mood?sslmode=disable" go run .
 ```
 
-Then open http://localhost:8080 — sign up, and start logging.
+Then open http://localhost:8080 — sign up and start logging.
 
-Config via env vars:
+### Environment variables
 
-- `ADDR` — listen address (default `:8080`)
-- `DB_DSN` — SQLite DSN (default `file:mood.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(5000)&_pragma=foreign_keys(ON)`)
+| variable | default | description |
+|---|---|---|
+| `ADDR` | `:8080` | listen address |
+| `DB_DSN` | `postgres://mood:mood@localhost:5432/mood?sslmode=disable` | PostgreSQL connection string |
 
 ### Make targets
 
@@ -39,77 +41,114 @@ Config via env vars:
 | `make down` | stop docker compose |
 | `make logs` | tail app container logs |
 | `make clean` | remove compiled binary |
-| `make deploy HOST=<ip>` | force-pull main on the droplet and restart |
+| `make deploy HOST=<ip>` | deploy to the droplet |
+
+## Database migrations
+
+Migrations are numbered SQL files in `internal/store/migrations/` and are applied
+automatically on startup. The app tracks which migrations have run in a
+`schema_migrations` table — already-applied versions are skipped.
+
+```
+internal/store/migrations/
+  001_initial.sql          # tables: users, sessions, mood_entries
+  002_add_username.sql     # adds username column to users
+```
+
+### Adding a new migration
+
+1. Create a new file following the naming convention: `NNN_description.sql`
+   (e.g. `003_add_avatar.sql`).
+2. Write idempotent SQL — use `IF NOT EXISTS` / `IF EXISTS` where possible so
+   re-runs are safe.
+3. Deploy or restart the app — migrations run automatically on startup.
+
+### How it works
+
+On startup, `OpenPostgres` creates the `schema_migrations` table (via
+`schema.sql`), then reads all `*.sql` files from the embedded `migrations/`
+directory, sorts them by version number, and runs any that haven't been applied
+yet. Each successful migration is recorded in `schema_migrations` with a
+timestamp.
+
+No external migration tool is required — the app is self-migrating.
+
+## Deployment
+
+The app runs on a DigitalOcean droplet behind Cloudflare (DNS proxy + origin
+certificates for HTTPS). Docker Compose manages three services:
+
+- **postgres** — PostgreSQL 17 (Alpine), data persisted in a named volume
+- **app** — the Go binary (built from scratch), connects to postgres on port 8080
+- **caddy** — reverse proxy, terminates TLS with Cloudflare origin certificates,
+  redirects HTTP → HTTPS
+
+### TLS certificates
+
+Cloudflare origin certificates are stored on the droplet at `~/certs/`:
+
+```
+~/certs/origin.pem        # certificate
+~/certs/origin-key.pem    # private key
+```
+
+These are mounted into the Caddy container (read-only). The Caddyfile serves
+HTTPS on :443 with the origin cert and redirects :80 → HTTPS.
+
+### CI/CD
+
+Pushing to `main` triggers the GitHub Actions workflow (`.github/workflows/deploy.yml`):
+
+1. Builds the Docker image and pushes to `ghcr.io/alvinnguyen0/mood:latest`
+2. SSHes into the droplet and runs `scripts/deploy.sh` (pulls latest image,
+   restarts containers)
+
+Migrations run automatically when the new container starts.
 
 ## Seed test data
 
 `cmd/seed` populates the database with test accounts and ~a year of varied mood
-history, so the **Everyone** grid (and individual **You** grids) have something
-to render. It writes to the same DB as the server (`DB_DSN`, default `mood.db`).
+history, so the **everyone** grid and individual **you** grids have data to
+render.
 
 ```bash
 go run ./cmd/seed                  # 100 accounts, ~365 days of history
 go run ./cmd/seed -n 50 -seed 7    # 50 accounts, reproducible RNG
 go run ./cmd/seed -docker          # seed the running docker compose db
-DB_DSN=file:dev.db go run ./cmd/seed
 ```
 
-Accounts are `user001@example.com` … `userNNN@example.com`, all sharing one
-password (default `password123`, override with `-password`), so you can log in
-as any of them. Moods vary per-user (cheerful vs. glum baselines, sparse vs.
-diligent loggers) over a slow community drift, so days read as genuinely good or
-bad rather than uniform noise. Re-running is idempotent: existing users are
-skipped and mood entries upsert, so the data converges instead of duplicating.
-
-Flags: `-n` (accounts), `-days` (history depth), `-password`, `-seed`, `-docker`.
-
-> **Not yet compiled/tested in this environment** — it was written without a Go
-> toolchain or network available, so `go run .` is the first real build. If the
-> compiler flags anything, it'll be a small fix; the structure and logic are
-> complete.
+Accounts are `user001@example.com` … `userNNN@example.com`, password
+`password123` (override with `-password`). Re-running is idempotent.
 
 ## Layout
 
 ```
-main.go                     entrypoint + config
+main.go                         entrypoint
+Dockerfile                      multi-stage build (scratch final image)
+docker-compose.yml              postgres + app + caddy
+Caddyfile                       TLS termination + reverse proxy
+scripts/deploy.sh               droplet deploy script
 internal/
-  model/      domain types (User, MoodEntry, Session, DayAverage)
-  store/      Store interface + SQLite implementation + schema.sql
-  service/    timezone "today", faces/colors, grid building, streak logic
-  web/        server, middleware, routes, handlers, templates, static assets
+  model/                        domain types (User, MoodEntry, Session, DayAverage)
+  store/                        Store interface + Postgres implementation
+    migrations/                 numbered SQL migration files
+  service/                      grid building, streaks, trends, colors
+  web/                          server, middleware, routes, handlers
+    templates/                  html/template pages + partials
+    static/                     CSS + JS (embedded via go:embed)
 ```
 
-## What's implemented (plan phases 1–3)
+## Features
 
-- **Auth**: signup/login/logout, bcrypt hashing, server-side sessions in a
-  cookie (HttpOnly, SameSite=Lax).
-- **Logging**: one entry per user per day (UPSERT), keyed to the user's local
-  date. Timezone is captured at signup from the browser.
-- **You grid**: ~52 weeks, colored cells, hover/tap tooltips.
-- **Streaks**: current + longest. Current anchors on today if logged, otherwise
-  yesterday, so an unlogged "today" doesn't prematurely break the streak.
-- **Everyone**: per-day average across all users, with count in the tooltip.
-
-## Notes & deviations from the plan
-
-- **Handlers live in one `web` package** as methods on `*Server` (rather than a
-  separate `handlers/` package) so they share the store and parsed templates
-  without extra wiring.
-- **Templates and static assets live under `internal/web/`** so they can be
-  bundled with `//go:embed` — the binary is self-contained.
-- **The schema lives at `internal/store/schema.sql`** (embedded and applied at
-  startup) instead of a separate `migrations/` directory.
-- **Timestamps are stored as RFC3339 TEXT** and dates as `YYYY-MM-DD` TEXT, to
-  avoid driver-specific datetime quirks.
-- **htmx is loaded from a CDN** in the layout for simplicity; vendor it locally
-  if you want zero external requests.
-
-## Still to do (plan phase 4 — polish/hardening)
-
-- **CSRF tokens** on POST forms (currently relying on SameSite=Lax).
-- Set cookie `Secure` unconditionally behind TLS in production (it's currently
-  set only when the request itself is TLS).
-- Smooth color interpolation on the Everyone grid (currently rounds to the
-  nearest band for color; the exact average is shown in the tooltip).
-- Tests for the streak logic and grid bounds.
-- Postgres `Store` implementation for scale (the interface is already in place).
+- **auth** — signup/login/logout, bcrypt hashing, server-side sessions
+  (HttpOnly, SameSite=Lax cookie)
+- **mood logging** — one entry per user per day (upsert), optional note (50
+  chars), keyed to user's local date
+- **you page** — activity grid, current/longest streaks, weekly average with
+  delta, most common mood, day-of-week breakdown
+- **everyone page** — community average grid, today's log count
+- **my account** — view email, set/change username, change password
+- **theme** — light (Catppuccin Latte) / dark (Catppuccin Mocha) toggle,
+  persisted in localStorage
+- **responsive** — works on mobile; grid scrolls horizontally and snaps to
+  most recent entries
