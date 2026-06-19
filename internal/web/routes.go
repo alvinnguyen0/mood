@@ -27,6 +27,7 @@ func (s *Server) routes() {
 			http.Redirect(w, r, "/everyone", http.StatusSeeOther)
 		})
 		r.Get("/everyone", s.everyonePage)
+		r.Get("/changelog", s.changelogPage)
 	})
 
 	// Authenticated

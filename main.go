@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	_ "embed"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +17,9 @@ import (
 
 var version = "dev"
 
+//go:embed CHANGELOG.md
+var changelogRaw string
+
 func main() {
 	dsn := os.Getenv("DB_DSN")
 	if dsn == "" {
@@ -27,7 +31,7 @@ func main() {
 	}
 	defer st.Close()
 
-	srv, err := web.New(st, version)
+	srv, err := web.New(st, version, changelogRaw)
 	if err != nil {
 		log.Fatalf("init server: %v", err)
 	}

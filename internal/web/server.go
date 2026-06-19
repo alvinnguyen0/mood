@@ -16,14 +16,15 @@ var assets embed.FS
 // Server holds shared dependencies and the routed handler. Handlers are
 // methods on *Server so they share the store and parsed templates.
 type Server struct {
-	store   store.Store
-	version string
-	pages   map[string]*template.Template
-	router  http.Handler
+	store     store.Store
+	version   string
+	changelog []changelogEntry
+	pages     map[string]*template.Template
+	router    http.Handler
 }
 
-func New(st store.Store, version string) (*Server, error) {
-	s := &Server{store: st, version: version}
+func New(st store.Store, version, changelogRaw string) (*Server, error) {
+	s := &Server{store: st, version: version, changelog: parseChangelog(changelogRaw)}
 	if err := s.parseTemplates(); err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func (s *Server) parseTemplates() error {
 		"templates/partials/grid.html",
 		"templates/partials/legend.html",
 	}
-	pages := []string{"you", "everyone", "login", "signup", "account"}
+	pages := []string{"you", "everyone", "login", "signup", "account", "changelog"}
 	s.pages = map[string]*template.Template{}
 	for _, p := range pages {
 		files := append([]string{"templates/layout.html", "templates/" + p + ".html"}, partials...)
