@@ -268,6 +268,15 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 }
 .pw-heading { margin-top: 28px; }
 
+/* --- version footer --- */
+.version {
+  text-align: center;
+  color: var(--muted);
+  font-size: .7rem;
+  padding: 0 20px 20px;
+  opacity: 0.6;
+}
+
 /* --- empty state --- */
 .empty-state { color: var(--muted); font-size: .95rem; margin: 18px 0; }
 
