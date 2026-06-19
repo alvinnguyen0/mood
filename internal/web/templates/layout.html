@@ -19,6 +19,7 @@
   </nav>
   <div class="nav-right">
     {{if .LoggedIn}}
+    <a href="/account" class="account-link{{if eq .Tab "account"}} active{{end}}">my account</a>
     <form method="post" action="/logout" class="logout"><input type="hidden" name="csrf_token" value="{{.CSRFToken}}"><button type="submit">log out</button></form>
     {{end}}
     <button id="theme-toggle" class="theme-toggle" aria-label="toggle theme"></button>

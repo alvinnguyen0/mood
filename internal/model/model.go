@@ -7,6 +7,7 @@ import "time"
 type User struct {
 	ID           int64
 	Email        string
+	Username     string
 	PasswordHash string
 	Timezone     string // IANA name, e.g. "America/New_York"
 	CreatedAt    time.Time

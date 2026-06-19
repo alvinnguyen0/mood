@@ -1,0 +1,36 @@
+{{define "title"}}my account{{end}}
+{{define "content"}}
+<section class="auth">
+  <h1>my account</h1>
+
+  {{if .Error}}<div class="err">{{.Error}}</div>{{end}}
+  {{if .Success}}<div class="success">{{.Success}}</div>{{end}}
+
+  <form method="post" action="/account" class="authform">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <input type="hidden" name="action" value="profile">
+    <label>email
+      <input type="email" value="{{.Email}}" disabled>
+    </label>
+    <label>username
+      <input type="text" name="username" value="{{.Username}}" maxlength="30" placeholder="choose a username">
+    </label>
+    <p class="hint">2–30 characters · letters, numbers, hyphens, underscores</p>
+    <button type="submit">save</button>
+  </form>
+
+  <h2 class="pw-heading">change password</h2>
+  <form method="post" action="/account" class="authform">
+    <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+    <input type="hidden" name="action" value="password">
+    <label>current password
+      <input type="password" name="current_password" required>
+    </label>
+    <label>new password
+      <input type="password" name="new_password" required minlength="8">
+    </label>
+    <p class="hint">at least 8 characters</p>
+    <button type="submit">change password</button>
+  </form>
+</section>
+{{end}}

@@ -34,6 +34,8 @@ func (s *Server) routes() {
 		r.Use(s.requireAuth)
 		r.Get("/you", s.youPage)
 		r.Post("/mood", s.logMood)
+		r.Get("/account", s.accountPage)
+		r.Post("/account", s.updateAccount)
 		r.Post("/logout", s.logout)
 	})
 
