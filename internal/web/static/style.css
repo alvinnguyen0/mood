@@ -174,10 +174,6 @@ h2 { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 0 0 12px; }
 /* --- grid --- */
 .gridsection {
   margin-top: 8px;
-  width: 100vw;
-  margin-left: calc(-50vw + 50%);
-  padding: 0 20px;
-  box-sizing: border-box;
 }
 .gridwrap { overflow-x: auto; padding-bottom: 6px; }
 .months {
