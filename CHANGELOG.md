@@ -1,3 +1,6 @@
+## v0.1.2 · september 2026
+- update deploy yml
+
 ## v0.1.1 · june 2026
 - add what's new page with auto-generated changelog
 
