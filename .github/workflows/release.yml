@@ -1,0 +1,79 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Bump version
+        id: version
+        run: |
+          latest=$(git tag -l 'v*' --sort=-v:refname | head -n1)
+          if [ -z "$latest" ]; then
+            next="v0.1.0"
+          else
+            IFS='.' read -r major minor patch <<< "${latest#v}"
+            next="v${major}.${minor}.$((patch + 1))"
+          fi
+          echo "tag=$next" >> "$GITHUB_OUTPUT"
+          echo "latest=$latest" >> "$GITHUB_OUTPUT"
+          echo "Bumping $latest → $next"
+
+      - name: Update changelog
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+          PREV: ${{ steps.version.outputs.latest }}
+        run: |
+          date_label=$(date +"%B %Y" | tr '[:upper:]' '[:lower:]')
+
+          if [ -n "$PREV" ]; then
+            changes=$(git log "$PREV"..HEAD --merges --pretty=format:"%b" \
+              | grep -v '^$' || true)
+            if [ -z "$changes" ]; then
+              changes=$(git log "$PREV"..HEAD --no-merges --pretty=format:"%s")
+            fi
+          else
+            changes=$(git log --no-merges --pretty=format:"%s")
+          fi
+
+          entry="## $TAG · $date_label"
+          bullets=$(echo "$changes" | while IFS= read -r line; do
+            [ -n "$line" ] && echo "- $line" || true
+          done)
+
+          if [ -f CHANGELOG.md ]; then
+            existing=$(cat CHANGELOG.md)
+          else
+            existing=""
+          fi
+
+          {
+            echo "$entry"
+            echo "$bullets"
+            echo ""
+            echo "$existing"
+          } > CHANGELOG.md
+
+      - name: Commit changelog
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.md
+          git diff --cached --quiet && exit 0
+          git commit -m "update changelog for ${{ steps.version.outputs.tag }} [skip ci]"
+          git push origin main
+
+      - name: Create git tag
+        run: |
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
