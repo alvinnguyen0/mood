@@ -50,7 +50,7 @@ jobs:
 
           entry="## $TAG · $date_label"
           bullets=$(echo "$changes" | while IFS= read -r line; do
-            [ -n "$line" ] && echo "- $line"
+            [ -n "$line" ] && echo "- $line" || true
           done)
 
           if [ -f CHANGELOG.md ]; then
